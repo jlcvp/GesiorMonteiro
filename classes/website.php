@@ -43,9 +43,9 @@ class Website extends WebsiteErrors
 			new Error_Critic('#C-9', 'ERROR: <b>#C-9</b> : Class::Website - getDBHandle(), database driver not set.');
 	}
 
-	public static function PDOInit($host, $dbname, $dbuser, $dbpasswd){
+	public static function PDOInit($host, $port, $dbname, $dbuser, $dbpasswd){
         if(!isset(self::$PDOConn)){
-            self::$PDOConn = new PDO('mysql:host='.$host.';dbname='.$dbname.'', $dbuser, $dbpasswd);
+            self::$PDOConn = new PDO('mysql:host='.$host.';port='.$port.';dbname='.$dbname.'', $dbuser, $dbpasswd);
             self::$PDOConn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
     }

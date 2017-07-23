@@ -39,6 +39,7 @@ else
 Website::setPasswordsEncryption(Website::getServerConfig()->getValue('passwordType'));
 
 Website::PDOInit(Website::getServerConfig()->getValue(SERVERCONFIG_SQL_HOST),
+                    Website::getServerConfig()->getValue(SERVERCONFIG_SQL_PORT),
                     Website::getServerConfig()->getValue(SERVERCONFIG_SQL_DATABASE),
                     Website::getServerConfig()->getValue(SERVERCONFIG_SQL_USER),
                     Website::getServerConfig()->getValue(SERVERCONFIG_SQL_PASS));
