@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $bonusPoints = $config['site']['bonusPoints'];
 if ($action == "") {
     $main_content .= '

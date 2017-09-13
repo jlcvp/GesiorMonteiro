@@ -1,4 +1,4 @@
-﻿<?PHP header("Content-Type: text/html; charset=UTF-8",true);
+<?PHP header("Content-Type: text/html; charset=UTF-8",true);
 if(!defined('INITIALIZED'))
 	exit;
 	$main_content .= '

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if(!defined('INITIALIZED'))
     exit;
 if(headers_sent()){

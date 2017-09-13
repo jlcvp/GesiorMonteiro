@@ -1,4 +1,4 @@
-﻿<?PHP header("Content-Type: text/html; charset=UTF-8",true);
+<?PHP header("Content-Type: text/html; charset=UTF-8",true);
 date_default_timezone_set('America/Sao_Paulo');
    // top kills - guilds
     $main_content .= '<center><div class="NewsHeadline">

@@ -1,4 +1,4 @@
-﻿<?PHP
+<?PHP
 if(!defined('INITIALIZED'))
 	exit;
 $main_content .= '
