@@ -59,7 +59,9 @@ class Player extends ObjectData
 					$keys[] = $this->getDatabaseHandler()->fieldName($key);
 					$values[] = $this->getDatabaseHandler()->quote($this->data[$key]);
 				}
-			$this->getDatabaseHandler()->query('INSERT INTO ' . $this->getDatabaseHandler()->tableName(self::$table) . ' (' . implode(', ', $keys) . ') VALUES (' . implode(', ', $values) . ')');
+			if(!$this->getDatabaseHandler()->query('INSERT INTO ' . $this->getDatabaseHandler()->tableName(self::$table) . ' (' . implode(', ', $keys) . ') VALUES (' . implode(', ', $values) . ')')){
+			    new Error_Critic('', 'Player::save() - insert failed');
+            };
 			$this->setID($this->getDatabaseHandler()->lastInsertId());
 		}
 		else
