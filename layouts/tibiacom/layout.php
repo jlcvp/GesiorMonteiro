@@ -702,13 +702,13 @@ $skills = $SQL->query('SELECT * FROM players WHERE deleted = 0 AND group_id = 1 
 <div id="NetworksBox" class="Themebox"  style="background-image:url(<?PHP echo "$layout_name"; ?>/images/themeboxes/networksbox.png);" >
   <div id="FacebookBlock" >
     <div id="FacebookLikeBox" >
-      <div class="fb-like-box" data-href="https://www.facebook.com/tibia" data-width="175" data-height="180" data-show-faces="true" data-stream="false" data-border-color="none" data-header="false"></div>
+      <div class="fb-like-box" data-href="https://www.facebook.com/otmalvera" data-width="175" data-height="180" data-show-faces="true" data-stream="false" data-border-color="none" data-header="false"></div>
     </div>
     <div id="FacebookSendBox" >
-      <div class="fb-send" data-href="https://www.facebook.com/tibia" data-width="50" data-height="20" ></div>
+      <div class="fb-send" data-href="https://www.facebook.com/otmalvera" data-width="50" data-height="20" ></div>
     </div>
     <div id="FacebookLikes" >
-      <div class="fb-like" data-href="https://www.facebook.com/tibia" data-width="50" data-layout="standard" data-show-faces="false" ></div>
+      <div class="fb-like" data-href="https://www.facebook.com/otmalvera" data-width="50" data-layout="standard" data-show-faces="false" ></div>
     </div>
   </div>
   <div id="TwitterBlock" >
