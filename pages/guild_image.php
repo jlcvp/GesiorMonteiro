@@ -1,4 +1,4 @@
-<?PHP header("Content-Type: text/html; charset=UTF-8",true);
+<?php
 if(!defined('INITIALIZED'))
 	exit;
 $guild_id = (int) $_REQUEST['id'];

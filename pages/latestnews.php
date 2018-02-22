@@ -1,24 +1,62 @@
 <?PHP header("Content-Type: text/html; charset=UTF-8",true);
 date_default_timezone_set('America/Sao_Paulo');
    // top kills - guilds
-    $main_content .= '<center><div class="NewsHeadline">
-        <div class="NewsHeadlineBackground" style="background-image:url(' . $layout_name . '/images/news/newsheadline_background.gif);">
+		$main_content .= '
+		<center><div class="NewsHeadline">
+			<div class="NewsHeadlineBackground" style="background-image:url('.$layout_name.'/images/content/newsheadline_background.gif)">
             <table border="0">
                 <tr>
                     <td style="text-align: center; font-weight: bold; padding-top: 5px;">
-                        <font color="white">Guildas Mais Poderosas</font>
+                        <font color="white">Most Powerful Guilds</font>
                     </td>
                 </tr>
             </table>
-        </div>
-    </div>
-    <table border="0" cellspacing="3" cellpadding="4" width="100%"><tr>';
-   
-    foreach($SQL->query('SELECT `g`.`id` AS `id`, `g`.`name` AS `name`, COUNT(`g`.`name`) as `frags` FROM `players` p LEFT JOIN `player_deaths` pd ON `pd`.`killed_by` = `p`.`name` LEFT JOIN `guild_membership` gm ON `p`.`id` = `gm`.`player_id` LEFT JOIN `guilds` g ON `gm`.`guild_id` = `g`.`id` WHERE `g`.`id` > 0 AND `pd`.`unjustified` = 1 GROUP BY `name` ORDER BY `frags` DESC, `name` ASC LIMIT 6;') as $guild)
-    $main_content .= '<td style="width: 25%; text-align: center;"><a href="?subtopic=guilds&action=show&guild=' . $guild['id'] . '"><img src="guild_image.php?id=' . $guild['id'] . '" width="64" height="64" border="0"/> <br />' . $guild['name'] . '</a><br />' . $guild['frags'] . ' kills
-    </td>';
-    $main_content .= '</tr></table></center>';
-date_default_timezone_set('America/Sao_Paulo');
+			</div>
+		</div>';
+	$main_content .= '					
+		<table class="Table3" cellpadding="0" cellspacing="0" width="100%">
+			<tbody>
+				<tr>
+					<td>
+						<div class="InnerTableContainer" >
+							<table style="width:100%;" >
+								<tr>
+									<td>
+										<div class="TableShadowContainerRightTop" >
+											<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+										</div>
+										<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+											<div class="TableContentContainer" style="padding:5px;">
+												<table class="TableContent" width="100%">';
+											$guildsPower = $SQL->query('SELECT `g`.`id` AS `id`, `g`.`name` AS `name`, COUNT(`g`.`name`) as `frags` FROM `players` p LEFT JOIN `player_deaths` pd ON `pd`.`killed_by` = `p`.`name` LEFT JOIN `guild_membership` gm ON `p`.`id` = `gm`.`player_id` LEFT JOIN `guilds` g ON `gm`.`guild_id` = `g`.`id` WHERE `pd`.`unjustified` = 1 GROUP BY `name` ORDER BY `frags` DESC, `name` ASC LIMIT 0, 4')->fetchAll();
+												$main_content .= '<tr>';
+											foreach($guildsPower as $guildp) {
+												$main_content .= '
+													<td style="width: 25%; text-align: center;">
+														<a href="?subtopic=guilds&action=view&GuildName=' . $guildp['name'] . '"><img src="guild_image.php?id=' . $guildp['id'] . '" width="64" height="64" border="0"/><br />' . $guildp['name'] . '</a><br />' . $guildp['frags'] . ' kills
+													</td>';
+											}
+												$main_content .= '</tr>';
+											$main_content .= '																
+												</table>
+											</div>
+										</div>
+										<div class="TableShadowContainer" >
+											<div class="TableBottomShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bm.gif);" >
+												<div class="TableBottomLeftShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bl.gif);" ></div>
+												<div class="TableBottomRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-br.gif);" ></div>
+											</div>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table></center>';
+	
+	date_default_timezone_set('America/Sao_Paulo');
 //######################## SHOW TICKERS AND NEWS #######################
 if ($logged){
 $players_from_account = $SQL->query("SELECT `players`.`name`, `players`.`id` FROM `players` WHERE `players`.`account_id` = ".(int) $account_logged->getId())->fetchAll();
@@ -139,7 +177,7 @@ var showednewticker_state = "0";
 function showNewTickerForm()
 {
 if(showednewticker_state == "0") {
-document.getElementById("newtickerform").innerHTML = \'<form action="index.php?subtopic=latestnews&action=newticker" method="post" ><table border="0"><tr><td bgcolor="D4C0A1" align="center"><b>Select icon:</b></td><td><table border="0" bgcolor="F1E0C6"><tr><td><img src="'.$layout_name.'/images/news/icon_0.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_1.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_2.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_3.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_4.gif" width="20"></td></tr><tr><td><input type="radio" name="icon_id" value="0" checked="checked"></td><td><input type="radio" name="icon_id" value="1"></td><td><input type="radio" name="icon_id" value="2"></td><td><input type="radio" name="icon_id" value="3"></td><td><input type="radio" name="icon_id" value="4"></td></tr></table></td></tr><tr><td align="center" bgcolor="D4C0A1"><b>New<br>ticker<br>text:</b></td><td bgcolor="F1E0C6"><textarea name="new_ticker" rows="3" cols="45"></textarea></td></tr><tr><td><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" ></div></div></form><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><img class="ButtonText" id="AddTicker" src="'.$layout_name.'/images/buttons/_sbutton_cancel.gif" onClick="showNewTickerForm()" alt="AddTicker" /></div></div></td></tr></table>\';
+document.getElementById("newtickerform").innerHTML = \'<form action="index.php?subtopic=latestnews&action=newticker" method="post" ><table border="0"><tr><td bgcolor="D4C0A1" align="center"><b>Select icon:</b></td><td><table border="0" bgcolor="F1E0C6"><tr><td><img src="'.$layout_name.'/images/news/icon_0.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_1.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_2.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_3.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_4.gif" width="20"></td><td><img src="'.$layout_name.'/images/news/icon_5.gif" width="20"></td></tr><tr><td><input type="radio" name="icon_id" value="0" checked="checked"></td><td><input type="radio" name="icon_id" value="1"></td><td><input type="radio" name="icon_id" value="2"></td><td><input type="radio" name="icon_id" value="3"></td><td><input type="radio" name="icon_id" value="4"></td><td><input type="radio" name="icon_id" value="5"></td></tr></table></td></tr><tr><td align="center" bgcolor="D4C0A1"><b>New<br>ticker<br>text:</b></td><td bgcolor="F1E0C6"><textarea name="new_ticker" rows="3" cols="45"></textarea></td></tr><tr><td><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" ></div></div></form><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><img class="ButtonText" id="AddTicker" src="'.$layout_name.'/images/buttons/_sbutton_cancel.gif" onClick="showNewTickerForm()" alt="AddTicker" /></div></div></td></tr></table>\';
 document.getElementById("jajo").innerHTML = \'\';
 showednewticker_state = "1";
 }
@@ -178,7 +216,7 @@ $news_content .= '
             <div id="TeaserThumbnail"><img src="layouts/tibiacom/images/news/featured.jpg"  width="200" height="125" border="1" alt="" align="right" hspace="0"></div>
                 <div id="TeaserText">
                     <div style="position: relative; top: -9px; margin-bottom: 10px;"><br>
-				 <font size="2px"></font><center><font size="2px"><b> IP:</b> malvera.online |&nbsp;  <b>Port:</b> 7171 |&nbsp;  <b>Version:</b> 10.99/11.00</font> <br> </a></center><br><font size="2px">Seja bem vindo ao <b><font color="green">' . htmlspecialchars($config['server']['serverName']) . '</font></b>, contamos com o <b>RLMAP</b> mais completo de todos os servidores atualmente, principais quests <b>SEM MISSÕES</b>, Cooldown e Magias reformuladas para um PvP mais dinâmico e divertido. <b>Exp shared 100%, All Quests</b>. Diversos bugs fixados e sendo arrumados <u>diariamente</u>. Venha conferir o melhor servidor de todos os tempos! Aqui sua diversao e garantida!
+				 <font size="2px"></font><center><font size="2px"><b> IP:</b> '.$config['server']['ip'].' |&nbsp;  <b>Port:</b> 7171 |&nbsp;  <b>Version:</b> 11.00</font> <br> </a></center><br><font size="2px">Seja bem vindo ao <b><font color="green">' . htmlspecialchars($config['server']['serverName']) . '</font></b>, contamos com o <b>RLMAP</b> mais completo de todos os servidores atualmente, principais quests <b>SEM MISSÕES</b>, Cooldown e Magias reformuladas para um PvP mais dinâmico e divertido. <b>Exp shared 100%, All Quests</b>. Diversos bugs fixados e sendo arrumados <u>diariamente</u>. Venha conferir o melhor servidor de todos os tempos! Aqui sua diversao e garantida!
                 </font> </div>
 	 </div>
             </div>
@@ -284,12 +322,11 @@ $zapytanie = $SQL->query("SELECT `z_forum`.`icon_id`,`z_forum`.`post_topic`, `z_
 ///show news
 $announcements = $SQL->query("SELECT * FROM `announcements` WHERE id ORDER BY `date` DESC LIMIT 1");
 foreach ($announcements as $announcementsRow){
-$news_content .= '<div id="featuredarticle" class="Box">
+$news_content .= '<div id="news" class="Box">
 <div class="Corner-tl" style="background-image:url('.$layout_name.'/images/content/corner-tl.gif);"></div>
 <div class="Corner-tr" style="background-image:url('.$layout_name.'/images/content/corner-tr.gif);"></div>
 <div class="Border_1" style="background-image:url('.$layout_name.'/images/content/border-1.gif);"></div>
 <div class="BorderTitleText" style="background-image:url('.$layout_name.'/images/content/title-background-green.gif);"></div>
-<img class="Title" src="montaimg.php?text=Announcement" alt="Contentbox headline" />
 <div class="Border_2">
 <div class="Border_3">
 <div class="BoxContent" style="background-image:url('.$layout_name.'/images/content/scroll.gif);">
@@ -337,7 +374,6 @@ foreach ($zapytanie as $row)
 		$message = preg_replace(array_keys($BB), array_values($BB), nl2br($row['post_text']));
         $main_content .= '
 		<div class="NewsHeadline">
-		<img class="Title"  src="/images/head/Latest News.png" alt="Contentbox headline" />
 		<div class="NewsHeadlineBackground" style="background-image:url('.$layout_name.'/images/news/newsheadline_background.gif)">
 		<img src="'.$layout_name.'/images/news/icon_'.$row['icon_id'].'_big.gif" class="NewsHeadlineIcon" />
 		<div class="NewsHeadlineDate">'.date('j M Y', $row['post_date']).' - </div>

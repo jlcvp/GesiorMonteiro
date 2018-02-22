@@ -759,6 +759,90 @@ label {
   left: 5px;
   background-repeat: repeat-y;
 }
+
+
+
+
+
+
+/* LOGIN BOX 2 */
+#Loginbox2 {
+  position: relative;
+  left: 5px;
+  top: 0px;
+  width: 100%;
+  margin-bottom: 42px;
+  background-repeat: no-repeat;
+}
+
+#Loginbox2 #LoginTop2 {
+  position: absolute;
+  left: -5px;
+  top: -12px;
+  height: 12px;
+  width: 180px;
+  background-repeat: no-repeat;
+}
+
+#Loginbox2 #LoginBottom2 {
+  position: absolute;
+  top: 52px;
+  left: -5px;
+  height: 12px;
+  width: 180px;
+  background-repeat: no-repeat;
+}
+
+#Loginbox2 .LoginBorder2 {
+  position: absolute;
+  top: 0px;
+  height: 52px;
+  width: 8px;
+  background-repeat: repeat-y;
+  z-index: 10;
+}
+
+#Loginbox2 #BorderRight2 {
+  right: 9px;
+}
+
+#Loginbox2 .Loginstatus2 {
+  position: relative;
+  top: 0px;
+  left: 5px;
+  height: 13px;
+  width: 160px;
+}
+
+#Loginbox2 .LoginstatusText2 {
+  position: absolute;
+  top: 1px;
+  left: 18px;
+  width: 124px;
+  height: 11px;
+  cursor: pointer;
+}
+
+#Loginbox2 #LoginstatusText_12 {
+  visibility: visible;
+}
+
+#Loginbox2 #LoginstatusText_22 {
+  visibility: hidden;
+}
+
+#LoginBox2 #LoginButtonContainer2 {
+  position: relative;
+  height: 39px;
+  width: 160px;
+  left: 5px;
+  background-repeat: repeat-y;
+}
+
+/*  */
+
+
+
 #PlayNowContainer {
   position: absolute;
   width: 150px;
@@ -1173,16 +1257,39 @@ label {
 #Themeboxes #PremiumBox {
   height: 164px;
 }
-#Themeboxes #ScreenshotBox #ScreenshotContent {
+#Themeboxes #JobBox {
+  height: 164px;
+}
+#Themeboxes #ScreenshotBox #ScreenshotContentFrame {
   position: relative;
   height: 111px;
-  width: 170px;
-  top: 31px;
-  left: 0px;
+  width: 166px;
+  top: 33px;
+  left: 2px;
   margin-left: 5px;
   margin-right: 5px;
   border: 0;
   cursor: pointer;
+}
+#Themeboxes #ScreenshotBox #ScreenshotContentImageContainer {
+  position: absolute;
+  top: 35px;
+  left: 5px;
+  overflow: hidden;
+  width: 160px;
+  height: 104px;
+  margin-left: 5px;
+}
+#Themeboxes #ScreenshotBox #ScreenshotContentImage {
+  position: absolute;
+  width: 974px;
+  height: 621px;
+  left: -400px;
+  top: -200px;
+}
+#Themeboxes #ScreenshotBox {
+  position: relative;
+  top: -3px;
 }
 #Themeboxes #CurrentPollBox #CurrentPollText {
   font-family: Verdana, Arial, sans-serif;
