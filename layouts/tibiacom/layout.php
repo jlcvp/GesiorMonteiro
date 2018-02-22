@@ -51,10 +51,10 @@ target.style.cursor = "default"
 
   <title>Tibia - Free Multiplayer Online Role Playing Game</title>
   <meta name="description" content="<?PHP echo $title ?> Tibia is a free massively multiplayer online role-playing game (MMORPG). Join this fascinating game that has thousands of fans from all over the world!" />
-  <meta name="author" content="Marco Oliveira" />
+  <meta name="author" content="Cipsoft" />
   <meta http-equiv="content-language" content="PT-BR" />
   <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-  <meta name="keywords" content="Toboa is a free massively multiplayer online role-playing game (MMORPG). Join this fascinating game that has thousands of fans from all over the world!" />
+  <meta name="keywords" content="Tibia is a free massively multiplayer online role-playing game (MMORPG). Join this fascinating game that has thousands of fans from all over the world!" />
   <link rel="shortcut icon" href="<?PHP echo $layout_name; ?>/images/server.ico" type="image/x-icon"/>
   <link rel="icon" href="layouts\tibiacom\images\header\favicon.ico" type="image/x-icon" />
   <?PHP echo $layout_header; ?>
@@ -162,6 +162,18 @@ function showSpoiler(obj)
 <div id="BorderRight" class="LoginBorder" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/chain.gif)" ></div>
 <div id="LoginBottom" class="Loginstatus" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/box-bottom.gif)" ></div>
 </div>
+
+<div id="Loginbox2" >
+<div id="LoginTop2" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/box-top.gif)" ></div>
+<div id="BorderLeft2" class="LoginBorder2" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/chain.gif); height: 39px;" ></div>
+<div id="LoginButtonContainer2" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/loginbox/loginbox-textfield-background.gif)" >
+<div id="PlayNowContainer" ><form class="MediumButtonForm" action="?subtopic=downloads" method="post" ><input type="hidden" name="page" value="overview" ><div class="MediumButtonBackground" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/buttons/mediumbutton.gif)" onMouseOver="MouseOverMediumButton(this);" onMouseOut="MouseOutMediumButton(this);" ><div class="MediumButtonOver" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/buttons/mediumbutton-over.gif)" onMouseOver="MouseOverMediumButton(this);" onMouseOut="MouseOutMediumButton(this);" ></div><input class="MediumButtonText" type="image" name="Download" alt="Download" src="<?PHP echo "$layout_name"; ?>/images/buttons/mediumbutton_download.png" /></div></form></div>
+</div>
+<div id="BorderRight2" class="LoginBorder2" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/chain.gif); height: 39px;" ></div>
+<div id="LoginBottom2" class="Loginstatus" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/box-bottom.gif); top: 39px;" ></div>
+</div>
+
+
 <div>
 <table class='table'><tr><td> </td></tr></table>
 </div>
@@ -532,9 +544,10 @@ echo "<a href='?subtopic=serverinfo'>
 </a>
 </div>
 </div>
-
-<div id='events' class='menuitem'>
-<span onClick="MenuItemAction('events')">
+<?PHP
+    if ($config['site']['events']) {
+        echo " <div id='events' class='menuitem'>
+<span onClick=\"MenuItemAction('events')\">
   <div class='MenuButton' style='background-image:url(./layouts/tibiacom/images/menu/button-background.gif);'>
     <div onMouseOver='MouseOverMenuItem(this);' onMouseOut='MouseOutMenuItem(this);'><div class='Button' style='background-image:url(./layouts/tibiacom/images/menu/button-background-over.gif);'></div>
       <span id='events_Lights' class='Lights'>
@@ -567,9 +580,10 @@ echo "<a href='?subtopic=serverinfo'>
   </div>
 </a>
 </div>
-</div>
+</div>";
+}?>
 
-    <?PHP
+<?PHP
     if ($config['site']['shop_system']) {
         echo "
 <div id='shops' class='menuitem'>
@@ -623,6 +637,18 @@ echo "<a href='?subtopic=serverinfo'>
     <div class="Corner-tr" style="background-image:url(<?PHP echo $layout_name; ?>/images/content/corner-tr.gif);"></div>
     <div class="Border_1" style="background-image:url(<?PHP echo $layout_name; ?>/images/content/border-1.gif);"></div>
     <div class="BorderTitleText" style="background-image:url(<?PHP echo $layout_name; ?>/images/content/title-background-green.gif);"></div>
+	<?php
+	$headline = ucfirst($_REQUEST['subtopic']);
+	if($_REQUEST['subtopic'] == "accountmanagement")
+		$headline = "Account Management";
+	elseif($_REQUEST['subtopic'] == "latestnews")
+		$headline = "News";
+	elseif($_REQUEST['subtopic'] == "createaccount")
+		$headline = "Create Account";
+	elseif($_REQUEST['subtopic'] == "whoisonline")
+		$headline = "Who is Online";
+	?>
+    <img id="ContentBoxHeadline" class="Title" src="pages/headline.php?txt=<?PHP echo ucwords(str_replace('_', ' ', strtolower($headline))); ?>" alt="Contentbox headline">
     <div class="Border_2">
       <div class="Border_3">
         <div class="BoxContent" style="background-image:url(<?PHP echo $layout_name; ?>/images/content/scroll.gif);">
@@ -686,10 +712,17 @@ $skills = $SQL->query('SELECT * FROM players WHERE deleted = 0 AND group_id = 1 
     </div>
   </div>
   <div id="TwitterBlock" >
-    <a href="https://twitter.com" class="twitter-follow-button" data-show-count="false">Follow @materiaotglobal</a>
+    <a href="https://twitter.com" class="twitter-follow-button" data-show-count="false">Follow @tibia</a>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
   </div>
   <div class="Bottom" style="background-image:url(<?PHP echo "$layout_name"; ?>/images/general/box-bottom.gif);"></div>
+</div>
+<!-- Server Info theme box -->
+  <div id="ScreenshotBox" class="Themebox" style="background-image:url(<?PHP echo $layout_name; ?>/images/themeboxes/serverinfo/serverinfobox.gif);">
+	<a href="?subtopic=serverinfo">
+	<img id="ScreenshotContent" class="ThemeboxContent" style="padding: 32px 40px 30px 5px;" src="<?php echo $layout_name; ?>/images/themeboxes/serverinfo/serverinfo.gif" alt="Server Info">
+	</a>
+	<div class="Bottom" style="background-image:url(<?php echo $layout_name; ?>/images/general/box-bottom.gif);"></div>
 </div>
 
         </div>

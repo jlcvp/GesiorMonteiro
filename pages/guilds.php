@@ -1,104 +1,195 @@
-<?PHP header("Content-Type: text/html; charset=UTF-8",true);
+<?php
 if(!defined('INITIALIZED'))
 	exit;
 
-if($action == 'login')
-{
-	if(check_guild_name($_REQUEST['guild']))
-		$guild = $_REQUEST['guild'];
-	if($_REQUEST['redirect'] == 'guild' || $_REQUEST['redirect'] == 'guilds')
-		$redirect = $_REQUEST['redirect'];
-	if(!$logged)
-	{
-		$main_content .= 'Please enter your account number and your password.<br/><a href="?subtopic=createaccount" >Create an account</a> if you do not have one yet.<br/><br/><form action="?subtopic=guilds&action=login&guild='.urlencode($guild).'&redirect='.$redirect.'" method="post" ><div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Account Login</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td class="LabelV" ><span >Account Number:</span></td><td style="width:100%;" ><input type="password" name="account_login" SIZE="10" maxlength="10" ></td></tr><tr><td class="LabelV" ><span >Password:</span></td><td><input type="password" name="password_login" size="30" maxlength="29" ></td></tr>          </table>        </div>  </table></div></td></tr><br/><table width="100%" ><tr align="center" ><td><table border="0" cellspacing="0" cellpadding="0" ><tr><td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" ></div></div></td><tr></form></table></td><td><table border="0" cellspacing="0" cellpadding="0" ><form action="?subtopic=lostaccount" method="post" ><tr><td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Account lost?" alt="Account lost?" src="'.$layout_name.'/images/buttons/_sbutton_accountlost.gif" ></div></div></td></tr></form></table></td></tr></table>';
-	}
-	else
-	{
-		$main_content .= '<center><h3>Now you are logged. Redirecting...</h3></center>';
-		if($redirect == 'guilds')
-			header("Location: ?subtopic=guilds");
-		elseif($redirect == 'guild')
-			header("Location: ?subtopic=guilds&action=show&guild=".urlencode($guild));
-		else
-			$main_content .= 'Wrong address to redirect!';
-	}
-}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show list of guilds
-if($action == '')
-{
-	$world_name = $config['server']['serverName'];
-	
+if($action == "") {
+
 	$guilds_list = new DatabaseList('Guild');
 	$guilds_list->addOrder(new SQL_Order(new SQL_Field('name'), SQL_Order::ASC));
 	
-	$main_content .= '<h2><center>Guilds on '.htmlspecialchars($world_name).'</center></h2><TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%>
-	<TR BGCOLOR='.$config['site']['vdarkborder'].'><TD COLSPAN=3 CLASS=white><B>Guilds on '.htmlspecialchars($world_name).'</B></TD></TR>
-	<TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=64><B>Logo</B></TD>
-	<TD WIDTH=100%><B>Description</B></TD>
-	<TD WIDTH=56><B>&#160;</B></TD></TR>';
-	$showed_guilds = 1;
-	if(count($guilds_list) > 0)
-	{
-		foreach($guilds_list as $guild)
-		{
-			if(is_int($showed_guilds / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; } $showed_guilds++;
-			$description = $guild->getDescription();
-			$newlines   = array("\r\n", "\n", "\r");
-			$description_with_lines = str_replace($newlines, '<br />', $description, $count);
-			if($count < $config['site']['guild_description_lines_limit'])
-				$description = $description_with_lines;
-			$main_content .= '<TR BGCOLOR="'.$bgcolor.'"><TD><IMG SRC="'. $guild->getGuildLogoLink() .'" WIDTH=64 HEIGHT=64></TD>
-			<TD valign="top"><B>'.htmlspecialchars($guild->getName()).'</B><BR/>'.$description.'';
-			if($group_id_of_acc_logged >= $config['site']['access_admin_panel'])
-				$main_content .= '<br /><a href="?subtopic=guilds&action=deletebyadmin&guild='.$guild->getId().'">Delete this guild (for ADMIN only!)</a>';
-			$main_content .= '</TD><TD><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild->getId().'" METHOD=post><TR><TD>
-			<INPUT TYPE=image NAME="View" ALT="View" SRC="'.$layout_name.'/images/buttons/sbutton_view.gif" BORDER=0 WIDTH=120 HEIGHT=18>
-			</TD></TR></FORM></TABLE>
-			</TD></TR>';
-		}
-	}
-	else
-		$main_content .= '<TR BGCOLOR='.$config['site']['lightborder'].'><TD><IMG SRC="images/default_guild_logo.gif" WIDTH=64 HEIGHT=64></TD>
-		<TD valign="top"><B>Create guild</B><BR/>Currently there is no guild on server. Create first! Press button "Create Guild".</TD>
-		<TD><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=createguild" METHOD=post><TR><TD>
-		<INPUT TYPE=image NAME="Create Guild" ALT="Create Guild" SRC="'.$layout_name.'/images/buttons/sbutton_createguild.png" BORDER=0 WIDTH=120 HEIGHT=18>
-		</TD></TR></FORM></TABLE></TD></TR>';
-	$main_content .= '</TABLE><br><br>';
-	if($logged)
-		$main_content .= '<TABLE BORDER=0 WIDTH=100%><TR><TD ALIGN=center><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD><TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=createguild" METHOD=post><TR><TD>
-		<INPUT TYPE=image NAME="Create Guild" ALT="Create Guild" SRC="'.$layout_name.'/images/buttons/sbutton_createguild.png" BORDER=0 WIDTH=120 HEIGHT=18>
-		</TD></TR></FORM></TABLE></TD><TD ALIGN=center><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD></TR></TABLE>
-		<BR />If you have any problem with guilds try:
-		<BR /><a href="?subtopic=guilds&action=cleanup_players">Cleanup players</a> - can\'t join guild/be invited? Can\'t create guild? Try cleanup players.';
-	else
-		$main_content .= 'Before you can create guild you must login.<br><TABLE BORDER=0 WIDTH=100%><TR><TD ALIGN=center><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD><TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=login&redirect=guilds" METHOD=post><TR><TD>
-		<INPUT TYPE=image NAME="Login" ALT="Login" SRC="'.$layout_name.'/images/buttons/sbutton_login.gif" BORDER=0 WIDTH=120 HEIGHT=18>
-		</TD></TR></FORM></TABLE></TD><TD ALIGN=center><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD></TR></TABLE>';
+	$main_content .= '
+		<div class="TableContainer" >
+			<table class="Table3" cellpadding="0" cellspacing="0" >
+				<div class="CaptionContainer" >
+					<div class="CaptionInnerContainer" > 
+						<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+						<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+						<div class="Text" >Active Guilds on ' .htmlspecialchars($config['server']['serverName']). '</div>
+						<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+						<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+						<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+					</div>
+				</div>
+				<tr>
+					<td><div class="InnerTableContainer" >
+							<table style="width:100%;" >
+								<tr>
+									<td><div class="TableShadowContainerRightTop" >
+											<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+										</div>
+										<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+											<div class="TableContentContainer" >
+												<table class="TableContent" width="100%" >
+													<TR BGCOLOR=#D4C0A1>
+														<TD WIDTH=64><B>Logo</B></TD>
+														<TD WIDTH=100%><B>Description</B></TD>
+														<TD WIDTH=56><B>&#160;</B></TD>
+													</TR>';
+												$showed_guilds = 1;
+												if(count($guilds_list) > 0)
+												{
+													foreach($guilds_list as $guild)
+													{
+														if(is_int($showed_guilds / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; } $showed_guilds++;
+														$description = $guild->getDescription();
+														$newlines   = array("\r\n", "\n", "\r");
+														$description_with_lines = str_replace($newlines, '<br />', $description, $count);
+														if($count < $config['site']['guild_description_lines_limit'])
+															$description = $description_with_lines;
+														$main_content .= '
+															<TR BGCOLOR='.$bgcolor.'>
+																<TD><IMG SRC="'. $guild->getGuildLogoLink() .'" WIDTH=64 HEIGHT=64></TD>
+																<TD><B>'.htmlspecialchars($guild->getName()).'</B><BR>'.$description.'</TD>
+																<TD>
+																	<table border="0" cellspacing="0" cellpadding="0" >
+																		<form action="?subtopic=guilds&action=view" method="post" >
+																			<tr>
+																				<td style="border:0px;" ><input type="hidden" name=GuildName value="'.htmlspecialchars($guild->getName()).'" >
+																					<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																						<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																							<input class="ButtonText" type="image" name="View" alt="View" src="'.$layout_name.'/images/buttons/_sbutton_view.gif" >
+																						</div>
+																					</div>
+																				</td>
+																			</tr>
+																		</form>';
+																	if($group_id_of_acc_logged >= $config['site']['access_admin_panel'])
+																		$main_content .= '
+																		<form action="?subtopic=guilds&action=deletebyadmin" method="post">
+																			<tr>
+																				<td style="border:0px;" >
+																					<input type="hidden" name="guild" value="'.$guild->getId().'">
+																					<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton_red.gif)" >
+																						<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_red_over.gif);" ></div>
+																							<input class="ButtonText" type="image" name="Delete" alt="Delete" src="'.$layout_name.'/images/buttons/_sbutton_delete.gif" >
+																						</div>
+																					</div>
+																				</td>
+																			</tr>
+																		</form>';
+																	$main_content .= '
+																	</table>
+																</TD>
+															</TR>';
+													}
+												}
+												$main_content .= '
+												</table>
+											</div>
+										</div>
+										<div class="TableShadowContainer" >
+											<div class="TableBottomShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bm.gif);" >
+												<div class="TableBottomLeftShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bl.gif);" ></div>
+												<div class="TableBottomRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-br.gif);" ></div>
+											</div>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<BR>
+		<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%>
+			<TR>
+				<TD>No guild found that suits your needs?</TD>
+			</TR>
+			<TR>
+				<TD><table border="0" cellspacing="0" cellpadding="0" >
+						<form action="?subtopic=guilds&action=create" method="post" >
+							<tr>
+								<td style="border:0px;" >
+									<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+										<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+											<input class="ButtonText" type="image" name="FoundGuild" alt="FoundGuild" src="'.$layout_name.'/images/buttons/_sbutton_foundguild.gif" >
+										</div>
+									</div>
+								</td>
+							</tr>
+						</form>
+					</table>
+				</TD>
+			</TR>
+		</TABLE>';
 }
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show guild page
-if($action == 'show')
+if($action == "view")
 {
-	$guild_id = (int) $_REQUEST['guild'];
+	$guild_name = (string) $_REQUEST['GuildName'];
 	$guild = new Guild();
-	$guild->load($guild_id);
+	$guild->loadByName($guild_name);
 	if(!$guild->isLoaded())
-		$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
+		$guild_errors[] = 'Guild with name <b>'.$guild_name.'</b> doesn\'t exist.';
+	
 	if(!empty($guild_errors))
 	{
+		//errors
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+								<div class="Text" >Error</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>';
+											foreach($guild_errors as $guild_error)
+												$main_content .= '<p>'.$guild_error;
+										$main_content .= '
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
 		//show errors
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error;
-		//errors and back button
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
 	}
 	else
 	{
@@ -132,6 +223,7 @@ if($action == 'show')
 						}
 			}
 		}
+		
 		//show guild page
 		$description = $guild->getDescription();
 		$newlines   = array("\r\n", "\n", "\r");
@@ -140,509 +232,879 @@ if($action == 'show')
 			$description = $description_with_lines;
 		$guild_owner = $guild->getOwner();
 		if($guild_owner->isLoaded())
-			$guild_owner = $guild_owner->getName();
-		$main_content .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=100%><TR>
-		<TD><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=10 HEIGHT=1 BORDER=0></TD><TD>
-		<TABLE BORDER=0 WIDTH=100%>
-		<TR><TD WIDTH=64><IMG SRC="' . $guild->getGuildLogoLink() . '" WIDTH=64 HEIGHT=64></TD>
-		<TD ALIGN=center WIDTH=100%><H1>'.htmlspecialchars($guild->getName()).'</H1></TD>
-		<TD WIDTH=64><IMG SRC="' . $guild->getGuildLogoLink() . '" WIDTH=64 HEIGHT=64></TD></TR>
-		</TABLE><BR>'.$description.'<BR><BR><a href="?subtopic=characters&name='.urlencode($guild_owner).'"><b>'.htmlspecialchars($guild_owner).'</b></a> is guild leader of <b>'.htmlspecialchars($guild->getName()).'</b>.<BR>The guild was founded on '.htmlspecialchars($config['server']['serverName']).' on '.date("j F Y", $guild->getCreationData()).'.';
-		if($guild_leader)
-			$main_content .= '&nbsp;&nbsp;&nbsp;<a href="?subtopic=guilds&action=manager&guild='.$guild_id.'"><IMG SRC="'.$layout_name.'/images/buttons/sbutton_manageguild.png" BORDER=0 WIDTH=120 HEIGHT=18 alt="Manage Guild"></a>';
-		$main_content .= '<BR><BR>
-		<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%>
-		<TR BGCOLOR='.$config['site']['vdarkborder'].'><TD COLSPAN=3 CLASS=white><B>Guild Members</B></TD></TR>
-		<TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=30%><B>Rank</B></TD>
-		<TD WIDTH=70%><B>Name and Title</B></TD></TR>';
-		$showed_players = 1;
-		foreach($rank_list as $rank)
-		{
-			$players_with_rank = $rank->getPlayersList();
-			$players_with_rank_number = count($players_with_rank);
-			if($players_with_rank_number > 0)
-			{
-				if(is_int($showed_players / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; } $showed_players++;
-				$main_content .= '<TR BGCOLOR="'.$bgcolor.'"><TD valign="top">'.htmlspecialchars($rank->getName()).'</TD>
-				<TD><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%>';
-				foreach($players_with_rank as $player)
-				{
-					$main_content .= '<TR><TD><FORM ACTION="?subtopic=guilds&action=change_nick&name='.urlencode($player->getName()).'" METHOD="post"><A HREF="?subtopic=characters&name='.urlencode($player->getName()).'">'.($player->isOnline() ? "<font color=\"green\">".htmlspecialchars($player->getName())."</font>" : "<font color=\"red\">".htmlspecialchars($player->getName())."</font>").'</A>';
-					$guild_nick = $player->getGuildNick();
-					if($logged)
-						if(in_array($player->getId(), $players_from_account_ids))
-							$main_content .= '(<input type="text" name="nick" value="'.htmlspecialchars($player->getGuildNick()).'"><input type="submit" value="Change">)';
-						else
-						if(!empty($guild_nick))
-							$main_content .= ' ('.htmlspecialchars($player->getGuildNick()).')';
-					else
-						if(!empty($guild_nick))
-							$main_content .= ' ('.htmlspecialchars($player->getGuildNick()).')';
-					if($level_in_guild > $rank->getLevel() || $guild_leader)
-						if($guild_leader_char->getName() != $player->getName())
-							$main_content .= '&nbsp;<font size=1>{<a href="?subtopic=guilds&action=kickplayer&guild='.$guild->getId().'&name='.urlencode($player->getName()).'">KICK</a>}</font>';
-					$main_content .= '</FORM></TD></TR>';
+			$guild_owner = $guild_owner->getName();		
+		
+		$main_content .= '
+			<TABLE BORDER=0 WIDTH=100%>
+				<TR>
+					<TD WIDTH=64><IMG SRC="' . $guild->getGuildLogoLink() . '" WIDTH=64 HEIGHT=64></TD>
+					<TD ALIGN=center WIDTH=100%><H1>'.htmlspecialchars($guild->getName()).'</H1></TD>
+					<TD WIDTH=64><IMG SRC="' . $guild->getGuildLogoLink() . '" WIDTH=64 HEIGHT=64></TD>
+				</TR>
+			</TABLE>
+			<BR>
+			<TABLE Width=100%>
+				<colgroup>
+				<col width="90%">
+				<col width="10%">
+				</colgroup>
+				<TR>
+					<TD style="vertical-align:top; padding-right: 5px;"><div class="TableContainer" >
+							<table class="Table1" cellpadding="0" cellspacing="0" >
+								<div class="CaptionContainer" >
+									<div class="CaptionInnerContainer" > 
+										<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>									
+										<div class="Text" >Guild Information</div>
+										<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+										<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									</div>
+								</div>
+								<tr>
+									<td><div class="InnerTableContainer" >';
+									//show guild page
+									$description = $guild->getDescription();
+									$newlines   = array("\r\n", "\n", "\r");
+									$description_with_lines = str_replace($newlines, '<br />', $description, $count);
+									if($count < $config['site']['guild_description_lines_limit'])
+										$description = $description_with_lines;
+										$main_content .= '
+											<table style="width:100%;" >
+												<TR>
+													<TD>
+														<div id="GuildInformationContainer">
+															'.$description.'<br><br>
+															The guild was founded on '.$config['server']['serverName'].' on '.date("M d Y",$guild->getCreateDate()).'.<BR>
+															It is currently active.<BR>
+														</div>
+													</TD>
+												</TR>
+											</table>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</TD>
+					<TD style="vertical-align:top;">
+						<div class="TableContainer" >
+							<table class="Table1" cellpadding="0" cellspacing="0" >
+								<div class="CaptionContainer" >
+									<div class="CaptionInnerContainer" > 
+										<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+										<div class="Text" >Navigation</div>
+										<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+										<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									</div>
+								</div>
+								<tr>
+									<td>
+										<div class="InnerTableContainer" >
+											<table style="width:100%;" >
+												<tr>
+													<td align="center"><div id="NavigationContainer">
+															<table border="0" cellspacing="0" cellpadding="0" >
+																<form action="?subtopic=guilds" method="post" >
+																	<tr>
+																		<td style="border:0px;" >
+																			<input type="hidden" name=action value=guildwars >
+																			<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																			<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																				<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																					<input class="ButtonText" type="image" name="Guild Wars" alt="Guild Wars" src="'.$layout_name.'/images/buttons/_sbutton_guildwars.gif" >
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																</form>
+															</table>
+															<div style="font-size:1px;height:4px;" ></div>
+															<table border="0" cellspacing="0" cellpadding="0" >
+																<form action="?subtopic=guilds" method="post" >
+																	<tr>
+																		<td style="border:0px;" >
+																			<input type="hidden" name=action value=guildevents >
+																			<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																			<input type="hidden" name=world value="Neptera" >
+																			<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																				<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																					<input class="ButtonText" type="image" name="Guild Events" alt="Guild Events" src="'.$layout_name.'/images/buttons/_sbutton_guildevents.gif" >
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																</form>
+															</table>
+															<div style="font-size:1px;height:4px;" ></div>
+														</div>
+													</td>
+												</tr>
+											</table>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>';
+				if($guild_leader)
+					$main_content .= '
+						<div style="font-size:1px;height:6px;" ></div>
+						<div class="TableContainer" >
+							<table class="Table1" cellpadding="0" cellspacing="0" >
+								<div class="CaptionContainer" >
+									<div class="CaptionInnerContainer" > 
+										<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>										
+										<div class="Text" >Administration</div>
+										<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+										<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									</div>
+								</div>
+								<tr>
+									<td><div class="InnerTableContainer" >
+											<table style="width:100%;" >
+												<TR>
+													<TD align="center">
+														<div id="AdministrationContainer">
+															<table border="0" cellspacing="0" cellpadding="0" >
+																<form action="?subtopic=guilds" method="post" >
+																	<tr>
+																		<td style="border:0px;" >
+																			<input type="hidden" name=action value=description >
+																			<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																			<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																				<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																					<input class="ButtonText" type="image" name="Edit Description" alt="Edit Description" src="'.$layout_name.'/images/buttons/_sbutton_editdescription.gif" >
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																</form>
+															</table>															
+															<div style="font-size:1px;height:4px;" ></div>													
+															<table border="0" cellspacing="0" cellpadding="0" >
+																<form action="?subtopic=guilds" method="post" >
+																	<tr>
+																		<td style="border:0px;" >
+																			<input type="hidden" name=action value=disband >
+																			<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																			<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																				<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																					<input class="ButtonText" type="image" name="Disband Guild" alt="Disband Guild" src="'.$layout_name.'/images/buttons/_sbutton_disbandguild.gif" >
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																</form>
+															</table>
+															<div style="font-size:1px;height:4px;" ></div>
+															<table border="0" cellspacing="0" cellpadding="0" >
+																<form action="?subtopic=guilds" method="post" >
+																	<tr>
+																		<td style="border:0px;" >
+																			<input type="hidden" name=action value=resignleadership >
+																			<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																			<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																				<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																					<input class="ButtonText" type="image" name="Resign Leadership" alt="Resign Leadership" src="'.$layout_name.'/images/buttons/_sbutton_resignleadership.gif" >
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																</form>
+															</table>
+														</div>
+													</td>
+												</tr>
+											</table>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>';
+				$main_content .= '
+					</TD>
+				</TR>
+			</TABLE>
+			<script type="text/javascript" >
+			$(document).ready(function() {
+				var g_GuildInformationContainerHeight = $(\'#GuildInformationContainer\').height();
+				if($(\'#AdministrationContainer\').length > 0) {
+				  var g_AdministrationContainerHeight = $(\'#AdministrationContainer\').height() + 28;
+				  var g_NavigationContainerHeight = $(\'#NavigationContainer\').height() + 28;
+				} else {
+				  var g_NavigationContainerHeight = $(\'#NavigationContainer\').height();
+				  var g_AdministrationContainerHeight = 0;
 				}
-				$main_content .= '</TABLE></TD></TR>';
-			}
-		}
-		$main_content .= '</TABLE>';
-		$invited_list = $guild->listInvites();
-		if(count($invited_list) == 0)
-			$main_content .= '<BR><BR><TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD COLSPAN=2 CLASS=white><B>Invited Characters</B></TD></TR><TR BGCOLOR='.$config['site']['lightborder'].'><TD>No invited characters found.</TD></TR></TABLE>';
-		else
-		{
-			$main_content .= '<BR><BR><TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD COLSPAN=2 CLASS=white><B>Invited Characters</B></TD></TR>';
-			$show_accept_invite = 0;
-			$showed_invited = 1;
-			foreach($invited_list as $invited_player)
-			{
-				if(count($account_players) > 0)
-					foreach($account_players as $player_from_acc)
-						if($player_from_acc->getName() == $invited_player->getName())
-							$show_accept_invite++;
-				if(is_int($showed_invited / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; } $showed_invited++;
-				$main_content .= '<TR bgcolor="'.$bgcolor.'"><TD><a href="?subtopic=characters&name='.urlencode($invited_player->getName()).'">'.htmlspecialchars($invited_player->getName()).'</a>';
+				//alert(g_GuildInformationContainerHeight+\' \'+g_NavigationContainerHeight+\' \'+g_AdministrationContainerHeight);
+				if(g_GuildInformationContainerHeight < g_NavigationContainerHeight + g_AdministrationContainerHeight) {
+				  $(\'#GuildInformationContainer\').css(\'height\', g_NavigationContainerHeight + g_AdministrationContainerHeight);
+				} else {
+				  if($(\'#AdministrationContainer\').length > 0) {
+					$(\'#NavigationContainer\').css(\'height\', g_GuildInformationContainerHeight * 0.7 - 28);
+					$(\'#AdministrationContainer\').css(\'height\', g_GuildInformationContainerHeight * 0.3 - 28);
+				  } else {
+					$(\'#NavigationContainer\').css(\'height\', g_GuildInformationContainerHeight);
+				  }
+				}
+			  });</script> 
+			<BR>
+			<div class="TableContainer" >
+				<table class="Table3" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" />
+								</span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" />
+								</span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" />
+								</span>
+							
+							<div class="Text" >Guild Members</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" />
+								</span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" />
+								</span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" />
+								</span>
+						</div>
+					</div>
+					<tr>
+							<td>
+						<div class="InnerTableContainer" >
+							<table style="width:100%;" >
+								<tr><td>
+									<div class="TableShadowContainerRightTop" >
+										<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+									</div>
+									<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+										<div class="TableContentContainer" >
+											<table class="TableContent" width="100%" >
+												<tr class="LabelH">
+													<td>Rank <small style="font-weight:normal;" >[<a href="#" >sort</a>]</small> 
+													<img class="sortarrow" src="'.$layout_name.'/images/content/order_desc.gif" /></td>
+													<td>Name and Title</td>
+													<td>Vocation <small style="font-weight:normal;" >[<a href="#" >sort</a>]</small> 
+													<img class="sortarrow" src="'.$layout_name.'/images/general/blank.gif" /></td>
+													<td>Level <small style="font-weight:normal;" >[<a href="#" >sort</a>]</small> 
+													<img class="sortarrow" src="'.$layout_name.'/images/general/blank.gif" /></td>
+													<td>Status</td>
+												</tr>';
+											#show players
+											$showed_players = 1;
+											foreach($rank_list as $rank) {
+												$oi = 0;
+												if(!isset($_REQUEST['onlyshowonline']) || $_REQUEST['onlyshowonline'] == 0)
+													$players_with_rank = $rank->getPlayersList();
+												else
+													$players_with_rank = $rank->getOnlinePlayersList();
+												$players_with_rank_number = count($players_with_rank);
+												if($players_with_rank_number > 0) {
+													if(is_int($showed_players / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; }
+													$showed_players++;
+													foreach($players_with_rank as $player) {
+														$oi++;
+														$main_content .= '
+															<TR BGCOLOR='.$bgcolor.'>
+																<TD>'.(($oi == 1) ? htmlspecialchars($rank->getName()) : '').'</TD>
+																<TD>
+																	<A HREF="?subtopic=characters&name='.urlencode($player->getName()).'">'.htmlspecialchars($player->getName()).'</A>';
+																	if ($player->getGuildNick() != "")
+																		$main_content .= ' (' . $player->getGuildNick() . ')';
+															$main_content .= '
+																</TD>
+																	<TD>' . htmlspecialchars(Website::getVocationName($player->getVocation())) . '</TD>
+																	<TD>' . htmlspecialchars($player->getLevel()) . '</TD>
+																	<TD class="onlinestatus"><span '.((!$player->isOnline()) ? 'class="red"' : 'class="green"').'>'.((!$player->isOnline()) ? 'offline' : '<strong>online</strong>').'</span>
+																</TD>
+															</TR>';
+													}
+												}
+											}
+											$main_content .= '
+											</table>
+										</div>
+									</div>
+									<div class="TableShadowContainer" >
+										<div class="TableBottomShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bm.gif);" >
+											<div class="TableBottomLeftShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bl.gif);" ></div>
+											<div class="TableBottomRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-br.gif);" ></div>
+										</div>
+									</div>
+										</td>
+								</tr>
+								<tr>
+									<td>';
+								if(!isset($_REQUEST['onlyshowonline']) || $_REQUEST['onlyshowonline'] == 0)
+									$main_content .= '
+										<table class="InnerTableButtonRow" cellpadding="0" cellspacing="0" >
+											<tr>
+												<td></td>
+												<td align="right" style="padding-right:7px;width:100%;" >
+													<form action="?subtopic=guilds" method="post" style="padding:0px;margin:0px;" >
+														<input type="hidden" name="action" value="view" >
+														<input type="hidden" name="onlyshowonline" value="1" >
+														<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'" >
+														<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+															<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																<input class="ButtonText" type="image" name="Show Online" alt="Show Online" src="'.$layout_name.'/images/buttons/_sbutton_showonline.gif" >
+															</div>
+														</div>
+													</form>
+												</td>
+											</tr>
+										</table>';
+								else
+									$main_content .= '
+										<table class="InnerTableButtonRow" cellpadding="0" cellspacing="0" >
+											<tr>
+												<td></td>
+												<td align="right" style="padding-right:7px;width:100%;" >
+													<form action="?subtopic=guilds" method="post" style="padding:0px;margin:0px;" >
+														<input type="hidden" name="action" value="view" >
+														<input type="hidden" name="onlyshowonline" value="0" >
+														<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'" >
+														<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+															<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																<input class="ButtonText" type="image" name="Show All" alt="Show All" src="'.$layout_name.'/images/buttons/_sbutton_showall.gif" >
+															</div>
+														</div>
+													</form>
+												</td>
+											</tr>
+										</table>';
+								$main_content .= '
+									</td>
+								</tr>
+							</table>
+						</div>
+						</td>
+					</tr>
+				</table>
+			</div>';
+		if($logged) {
+			$main_content .= '
+				<TABLE BORDER=0 class="fixed">
+					<TR>
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">';
 				if($guild_vice)
-					$main_content .= '  (<a href="?subtopic=guilds&action=deleteinvite&guild='.$guild_id.'&name='.urlencode($invited_player->getName()).'">Cancel Invitation</a>)';
-				$main_content .= '</TD></TR>'; 
-			}
-			$main_content .= '</TABLE>';
+					$main_content .= '					
+						<TD>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=members >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Edit Members" alt="Edit Members" src="'.$layout_name.'/images/buttons/_sbutton_editmembers.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>';
+					if($guild_leader)
+					#Edit players ranks
+						$main_content .= '
+							<TD>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds" method="post" >
+										<tr>
+											<td style="border:0px;" >
+												<input type="hidden" name=action value=ranks >
+												<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+												<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Edit Ranks" alt="Edit Ranks" src="'.$layout_name.'/images/buttons/_sbutton_editranks.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>';
+				if($players_from_account_in_guild > 0)
+						$main_content .= '
+							<TD>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds" method="post" >
+										<tr>
+											<td style="border:0px;" >
+												<input type="hidden" name=action value=leave >
+												<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+												<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Leave Guild" alt="Leave Guild" src="'.$layout_name.'/images/buttons/_sbutton_leaveguild.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>';
+				$main_content .= '
+					</TR>
+				</TABLE>';
 		}
-
-		$main_content .= "<h3 align=\"center\">Guild Wars</h3>";
-		if($logged)
-		{
-			$main_content .= '<a href="?subtopic=guilds&action=guildwar_choose_enemy&guild=' . $guild_id . '"><b>Click here to start new war</b></a> - only guild leader can invite other guild to war.<br /><br />';
-		}
-		$main_content .= "<script type=\"text/javascript\"><!--
-		function show_hide(flip)
-		{
-				var tmp = document.getElementById(flip);
-				if(tmp)
-						tmp.style.display = tmp.style.display == 'none' ? '' : 'none';
-		}
-		--></script>
-		<table width=\"100%\" border=\"0\" cellspacing=\"1\" cellpadding=\"4\">
-		<tr>
-		<td style=\"background: " . $config['site']['vdarkborder'] . "\" class=\"white\" width=\"150\"><b>Aggressor</b></td>
-		<td style=\"background: " . $config['site']['vdarkborder'] . "\" class=\"white\"><b>Information</b></td>
-		<td style=\"background: " . $config['site']['vdarkborder'] . "\" class=\"white\" width=\"150\"><b>Enemy</b></td>
-		</tr>";
-		 
-		$warFrags = array();
-		foreach($SQL->query('SELECT * FROM `guildwar_kills` WHERE `killerguild` = ' . $guild_id . ' OR `targetguild` = ' . $guild_id . ' ORDER BY `time` DESC')->fetchAll() as $frag)
-		{
-			$warFrags[$frag['warid']][] = $frag;
-		}
-
-		$count = 0;
-		foreach($SQL->query('SELECT `guild_wars`.`id`, `guild_wars`.`guild1`, `guild_wars`.`guild2`, `guild_wars`.`name1`, `guild_wars`.`name2`, `guild_wars`.`status`, `guild_wars`.`started`, `guild_wars`.`ended`, (SELECT COUNT(1) FROM `guildwar_kills` WHERE `guildwar_kills`.`warid` = `guild_wars`.`id` AND `guildwar_kills`.`killerguild` = `guild_wars`.`guild1`) guild1_kills, (SELECT COUNT(1) FROM `guildwar_kills` WHERE `guildwar_kills`.`warid` = `guild_wars`.`id` AND `guildwar_kills`.`killerguild` = `guild_wars`.`guild2`) guild2_kills FROM `guild_wars` WHERE `guild1` = ' . $guild_id . ' OR `guild2` = ' . $guild_id . ' ORDER BY CASE `status` WHEN 0 THEN 2 WHEN 1 THEN 1 WHEN 4 THEN 3 WHEN 3 THEN 4 WHEN 2 THEN 5 END, `started` DESC') as $war)
-		{
-			$count++;
-			$main_content .= "<tr style=\"background: " . (is_int($count / 2) ? $config['site']['darkborder'] : $config['site']['lightborder']) . ";\">
-		<td align=\"center\"><a href=\"?subtopic=guilds&action=show&guild=".$war['guild1']."\"><img src=\"guild_image.php?id=" . $war['guild1'] . "\" width=\"64\" height=\"64\" border=\"0\"/><br />".htmlspecialchars($war['name1'])."</a></td>
-		<td class=\"white\" align=\"center\">";
-			switch($war['status'])
-			{
-				case 0:
-				{
-					$main_content .= "<font color=black><b>Pending acceptation</b><br />Invited on " . date("M d Y, H:i:s", $war['started']) . " for 2 hours war.<br />";
-					if($guild_leader && $war['guild2'] == $guild->getID())
-					{
-						$main_content .= '<br /><a href="?subtopic=guilds&action=guildwar_invitation_accept&guild=' . $guild_id . '&war=' . $war['id'] . '" onclick="return confirm(\'Are you sure that you want ACCEPT that invitation for 2 hours war?\');" style="cursor: pointer;">&raquo; Click here to <span style="color: lime;">accept</span> invitation to war &laquo;</a>';
-						$main_content .= '<br /><br /><a href="?subtopic=guilds&action=guildwar_invitation_reject&guild=' . $guild_id . '&war=' . $war['id'] . '" onclick="return confirm(\'Are you sure that you want REJECT that invitation for 2 hours war?\');" style="cursor: pointer;">&raquo; Click here to <span style="color: darkred;">reject</span> invitation to war &laquo;</a>';
-					}
-					if($guild_leader && $war['guild1'] == $guild->getID())
-					{
-						$main_content .= '<br /><br /><a href="?subtopic=guilds&action=guildwar_invitation_cancel&guild=' . $guild_id . '&war=' . $war['id'] . '" onclick="return confirm(\'Are you sure that you want CANCEL that invitation for 2 hours war?\');" style="cursor: pointer;">&raquo; Click here to <span style="color: darkred;">cancel</span> invitation to war &laquo;</a>';
-					}
-					$main_content .= '</font>';
-					break;
-				}
-				case 1:
-				{
-					$main_content .= "<font size=\"12\"><span style=\"color: red;\">" . $war['guild1_kills'] . "</span><font color=black> : </font><span style=\"color: lime;\">" . $war['guild2_kills'] . "</span></font><br /><br /><span style=\"color: darkred; font-weight: bold;\">On a brutal war</span><br /><font color=black>Began on " . date("M d Y, H:i:s", $war['started']) . ", will end up after server restart after " . date("M d Y, H:i:s", $war['started'] + (2*3600)) . ".<br /></font>";
-					$main_content .= "<br /><br />";
-					if(in_array($war['status'], array(1,4)))
-					{
-						$main_content .= "<a onclick=\"show_hide('war-details:" . $war['id'] . "'); return false;\" style=\"cursor: pointer;\">&raquo; Details &laquo;</a>";
-					}
-					break;
-				}
-				case 2:
-				{
-					$main_content .= "<font color=black><b>Rejected invitation</b><br />Invited on " . date("M d Y, H:i:s", $war['started']) . ", rejected on " . date("M d Y, H:i:s", $war['ended']) . ".</font>";
-					break;
-				}
-				case 3:
-				{
-					$main_content .= "<font color=black><b>Canceled invitation</b><br />Sent invite on " . date("M d Y, H:i:s", $war['started']) . ", canceled on " . date("M d Y, H:i:s", $war['ended']) . ".</font>";
-					break;
-				}
-				case 4:
-				{
-					$main_content .= "<font color=black><b><i>Ended</i></b><br />Began on " . date("M d Y, H:i:s", $war['started']) . ", ended on " . date("M d Y, H:i:s", $war['ended']) . ". Frag statistics: <span style=\"color: red;\">" . $war['guild1_kills'] . "</span> to <span style=\"color: lime;\">" . $war['guild2_kills'] . "</span>.";
-					$main_content .= "<br /><br />";
-					if(in_array($war['status'], array(1,4)))
-					{
-						$main_content .= "<a onclick=\"show_hide('war-details:" . $war['id'] . "'); return false;\" style=\"cursor: pointer;\">&raquo; Details &laquo;</a>";
-					}
-					$main_content .= "</font>";
-					break;
-				}
-				default:
-				{
-					$main_content .= "Unknown, please contact with gamemaster.";
-					break;
-				}
-			}
-			$main_content .= "</td>
-		<td align=\"center\"><a href=\"?subtopic=guilds&action=show&guild=".$war['guild2']."\"><img src=\"guild_image.php?id=" . $war['guild2'] . "\" width=\"64\" height=\"64\" border=\"0\"/><br />".htmlspecialchars($war['name2'])."</a></td>
-		</tr>
-		<tr id=\"war-details:" . $war['id'] . "\" style=\"display: none; background: " . (is_int($count / 2) ? $config['site']['darkborder'] : $config['site']['lightborder']) . ";\">
-		<td colspan=\"3\">";
-			if(in_array($war['status'], array(1,4)))
-			{
-				if(isset($warFrags[$war['id']]))
-				{
-					foreach($warFrags[$war['id']] as $frag)
-					{
-						$main_content .= date("j M Y, H:i", $frag['time']) . " <span style=\"font-weight: bold; color: " . ($frag['killerguild'] == $war['guild1'] ? "red" :"lime") . ";\">+</span><a href=\"?subtopic=characters&name=" . urlencode($frag['killer']) . "\"><b>".htmlspecialchars($frag['killer'])."</b></a> killed <a href=\"?subtopic=characters&name=".urlencode($frag['target'])."\"> " . htmlspecialchars($frag['target']) . "</a>";
-					}
-				}
-				else
-					$main_content .= "<center>There were no frags on this war so far.</center>";
-			}
-			else
-				$main_content .= "</td></tr>";
-		}
-		 
-		if($count == 0)
-			$main_content .= "<tr style=\"background:".$config['site']['darkborder'].";\">
-		<td colspan=\"3\">Currently there are no active wars.</td>
-		</tr>";
-		 
-		$main_content .= "</table>";
-
-		$main_content .= '<BR><BR>
-		<TABLE BORDER=0 WIDTH=100%><TR><TD ALIGN=center><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD>';
-		if(!$logged)
-			$main_content .= '<TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=login&guild='.$guild_id.'&redirect=guild" METHOD=post><TR><TD>
-			<INPUT TYPE=image NAME="Login" ALT="Login" SRC="'.$layout_name.'/images/buttons/sbutton_login.gif" BORDER=0 WIDTH=120 HEIGHT=18>
-			</TD></TR></FORM></TABLE></TD>';
-		else
-		{
-			if($show_accept_invite > 0)
-				$main_content .= '<TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=acceptinvite&guild='.$guild_id.'" METHOD=post><TR><TD>
-				<INPUT TYPE=image NAME="Accept Invite" ALT="Accept Invite" SRC="'.$layout_name.'/images/buttons/sbutton_acceptinvite.png" BORDER=0 WIDTH=120 HEIGHT=18>
-				</TD></TR></FORM></TABLE></TD>';
-			if($guild_vice)
-			{
-				$main_content .= '<TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=invite&guild='.$guild_id.'" METHOD=post><TR><TD>
-				<INPUT TYPE=image NAME="Invite Player" ALT="Invite Player" SRC="'.$layout_name.'/images/buttons/sbutton_inviteplayer.png" BORDER=0 WIDTH=120 HEIGHT=18>
-				</TD></TR></FORM></TABLE></TD>';
-				$main_content .= '<TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=changerank&guild='.$guild_id.'" METHOD=post><TR><TD>
-				<INPUT TYPE=image NAME="Change Rank" ALT="Change Rank" SRC="'.$layout_name.'/images/buttons/sbutton_changerank.png" BORDER=0 WIDTH=120 HEIGHT=18>
-				</TD></TR></FORM></TABLE></TD>';
-			}
-			if($players_from_account_in_guild > 0)
-				$main_content .= '<TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds&action=leaveguild&guild='.$guild_id.'" METHOD=post><TR><TD>
-				<INPUT TYPE=image NAME="Leave Guild" ALT="Leave Guild" SRC="'.$layout_name.'/images/buttons/sbutton_leaveguild.png" BORDER=0 WIDTH=120 HEIGHT=18>
-				</TD></TR></FORM></TABLE></TD>';
-		}
-		$main_content .= '<TD ALIGN=center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><FORM ACTION="?subtopic=guilds" METHOD=post><TR><TD>
-		<INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18>
-		</TD></TR></FORM></TABLE>
-		</TD><TD ALIGN=center><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD></TR></TABLE>
-		</TD><TD><IMG src="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=10 HEIGHT=1 BORDER=0></TD>
-		</TR></TABLE></TABLE>';
+		$main_content .= '
+		<BR>
+			<div class="TableContainer" >
+				<table class="Table3" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Invited Characters</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td><div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td>
+											<div class="TableShadowContainerRightTop" >
+												<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+											</div>
+											<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+												<div class="TableContentContainer" >
+													<table class="TableContent" width="100%" >';
+												$invited_list = $guild->listInvites();
+												if(count($invited_list) == 0)
+													$main_content .= '
+														<TR BGCOLOR=#F1E0C6>
+															<TD>No invited characters found.</TD>
+														</TR>';
+												else {
+													$main_content .= '
+														<TR BGCOLOR=#D4C0A1>
+															<TD WIDTH=70%><B>Name</B></TD>
+															<TD WIDTH=30%><B>Invitation Date</B></TD>
+														</TR>';
+													$show_accept_invite = 0;
+													$showed_invited = 1;
+													foreach($invited_list as $invited_player) {
+														if(count($account_players) > 0)
+															foreach($account_players as $player_from_acc)
+																if($player_from_acc->getName() == $invited_player->getName())
+																	$show_accept_invite++;
+														if(is_int($showed_invited / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; } $showed_invited++;
+														$main_content .= '
+															<TR BGCOLOR='.$bgcolor.'>
+																<TD><A HREF="?subtopic=characters&name='.urlencode($invited_player->getName()).'">'.htmlspecialchars($invited_player->getName()).'</A></TD>';
+															$invitedID = $invited_player->getId();
+															$getInviteDate = $SQL->query("SELECT `date` FROM `guild_invites` WHERE `player_id` = '$invitedID'")->fetch();
+															$main_content .= '
+																<TD>'.date("M d Y",$getInviteDate['date']).'</TD>
+															</TR>';
+													}
+													
+												}
+												$main_content .= '
+													</table>
+												</div>
+											</div>
+											<div class="TableShadowContainer" >
+												<div class="TableBottomShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bm.gif);" >
+													<div class="TableBottomLeftShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bl.gif);" ></div>
+													<div class="TableBottomRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-br.gif);" ></div>
+												</div>
+											</div>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>';
+		
+			$main_content .= '
+				<TABLE BORDER=0 class="fixed">
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">
+					<col width="140px">
+					<TR>';
+				if($guild_vice)
+					$main_content .= '
+						<TD><table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=invite >
+											<input type="hidden" name=GuildName value="'.$guild->getName().'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Invite Character" alt="Invite Character" src="'.$layout_name.'/images/buttons/_sbutton_invitecharacter.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>';
+				if($show_accept_invite > 0)
+					$main_content .= '
+						<TD>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=join >
+											<input type="hidden" name=GuildName value="'.$guild->getName().'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Join Guild" alt="Join Guild" src="'.$layout_name.'/images/buttons/_sbutton_joinguild.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>';
+				$main_content .= '
+					</TR>
+				</TABLE>';
+		$main_content .= '
+			<BR>
+			<TABLE BORDER=0 WIDTH=100%>
+				<TR>
+					<TD ALIGN=center><IMG SRC="'.$layout_name.'/images/general/blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD>					
+					<TD ALIGN="center">
+						<form action="?subtopic=guilds" method="post" style="padding:0px;margin:0px;" >
+							<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+								<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+									<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+								</div>
+							</div>
+						</form>
+					</TD>
+					<TD ALIGN=center><IMG SRC="'.$layout_name.'/images/general/blank.gif" WIDTH=80 HEIGHT=1 BORDER=0<BR></TD>
+				</TR>
+			</TABLE>';
 	}
 }
-
-//--------------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------------
-//change rank of player in guild
-if($action == 'changerank')
-{
-	$guild_id = (int) $_REQUEST['guild'];
+if($action == "create") {
+	$guild_name = trim($_REQUEST['name']);
+	$leader = $_REQUEST['leader'];
+	$todo = $_REQUEST['todo'];
+	$guild_password = trim($_REQUEST['password']);	
 	if(!$logged)
-		$guild_errors[] = 'You are not logged in. You can\'t change rank.';
-	if(empty($guild_errors))
+		$guild_errors[] = 'You are not logged in. You can\'t create guild.';
+	if(empty($guild_errors)) 
 	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(!empty($guild_errors))
-	{
-		//show errors
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error;
-		//errors and back button
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-	{
-	//check is it vice or/and leader account (leader has vice + leader rights)
-	$rank_list = $guild->getGuildRanksList();
-	$guild_leader = FALSE;
-	$guild_vice = FALSE;
-	$account_players = $account_logged->getPlayers();
-	foreach($account_players as $player)
-	{
-		$player_rank = $player->getRank();
-		if(!empty($player_rank))
-			foreach($rank_list as $rank_in_guild)
-				if($rank_in_guild->getId() == $player_rank->getId())
-				{
-					$players_from_account_in_guild[] = $player->getName();
-					if($player_rank->getLevel() > 1) {
-						$guild_vice = TRUE;
-						$level_in_guild = $player_rank->getLevel();
-					}
-					if($guild->getOwner()->getId() == $player->getId()) {
-						$guild_vice = TRUE;
-						$guild_leader = TRUE;
-					}
-				}
-	}
-	if($guild_vice)
-	{
-		foreach($rank_list as $rank)
-		{
-			if($guild_leader || $rank->getLevel() < $level_in_guild)
-			{
-				$ranks[$rid]['0'] = $rank->getId();
-				$ranks[$rid]['1'] = $rank->getName();
-				$rid++;
-				$players_with_rank = $rank->getPlayersList();
-				if(count($players_with_rank) > 0)
-				{
-					foreach($players_with_rank as $player)
-					{
-						if($guild->getOwner()->getId() != $player->getId() || $guild_leader)
-						{
-							$players_with_lower_rank[$sid]['0'] = htmlspecialchars($player->getName());
-							$players_with_lower_rank[$sid]['1'] = htmlspecialchars($player->getName()).' ('.htmlspecialchars($rank->getName()).')';
-							$sid++;
-						}
-					}
-				}
-			}
-		}
-		if($_REQUEST['todo'] == 'save')
-		{
-			$player_name = $_REQUEST['name'];
-			$new_rank = (int) $_REQUEST['rankid'];
-			if(!check_name($player_name))
-				$change_errors[] = 'Invalid player name format.';
-			$rank = new GuildRank();
-			$rank->load($new_rank);
-			if(!$rank->isLoaded())
-				$change_errors[] = 'Rank with this ID doesn\'t exist.';
-			if($level_in_guild <= $rank->getLevel() && !$guild_leader)
-				$change_errors[] = 'You can\'t set ranks with equal or higher level than your.';
-			if(empty($change_errors))
-			{
-				$player_to_change = new Player();
-				$player_to_change->find($player_name);
-				if(!$player_to_change->isLoaded())
-					$change_errors[] = 'Player with name '.htmlspecialchars($player_name).'</b> doesn\'t exist.';
-				else
-				{
-					$player_in_guild = FALSE;
-					if($guild->getName() == $player_to_change->getRank()->getGuild()->getName() || $guild_leader)
-					{
-						$player_in_guild = TRUE;
-						$player_has_lower_rank = FALSE;
-						if($player_to_change->getRank()->getLevel() < $level_in_guild || $guild_leader)
-							$player_has_lower_rank = TRUE;
-					}
-				}
-				$rank_in_guild = FALSE;
-				foreach($rank_list as $rank_from_guild)
-					if($rank_from_guild->getId() == $rank->getId())
-						$rank_in_guild = TRUE;
-				if(!$player_in_guild)
-				$change_errors[] = 'This player isn\'t in your guild.';
-				if(!$rank_in_guild)
-					$change_errors[] = 'This rank isn\'t in your guild.';
-				if(!$player_has_lower_rank)
-					$change_errors[] = 'This player has higher rank in guild than you. You can\'t change his/her rank.';
-			}
-			if(empty($change_errors))
-			{
-				$player_to_change->setRank($rank);
-				$player_to_change->save();
-				$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Rank of player <b>'.htmlspecialchars($player_to_change->getName()).'</b> has been changed to <b>'.htmlspecialchars($rank->getName()).'</b>.</td></tr>          </table>        </div>  </table></div></td></tr><br>';
-				unset($players_with_lower_rank);
-				unset($ranks);
-				$rid = 0;
-				$sid= 0;
-				foreach($rank_list as $rank)
-				{
-					if($guild_leader || $rank->getLevel() < $level_in_guild)
-					{
-						$ranks[$rid]['0'] = $rank->getId();
-						$ranks[$rid]['1'] = $rank->getName();
-						$rid++;
-						$players_with_rank = $rank->getPlayersList();
-						if(count($players_with_rank) > 0)
-						{
-							foreach($players_with_rank as $player)
-							{
-								if($guild->getOwner()->getId() != $player->getId() || $guild_leader)
-								{
-									$players_with_lower_rank[$sid]['0'] = htmlspecialchars($player->getName());
-									$players_with_lower_rank[$sid]['1'] = htmlspecialchars($player->getName()).' ('.htmlspecialchars($rank->getName()).')';
-									$sid++;
-								}
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-				foreach($change_errors as $change_error)
-					$main_content .= '<li>'.$change_error;
-				$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/>';
-			}
-		}
-		$main_content .= '<FORM ACTION="?subtopic=guilds&action=changerank&guild='.$guild_id.'&todo=save" METHOD=post>
-		<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%>
-		<TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Change Rank</B></TD></TR>
-		<TR BGCOLOR='.$config['site']['darkborder'].'><TD>Name: <SELECT NAME="name">';
-		foreach($players_with_lower_rank as $player_to_list)
-			$main_content .= '<OPTION value="'.$player_to_list['0'].'">'.$player_to_list['1'];
-		$main_content .= '</SELECT>&nbsp;Rank:&nbsp;<SELECT NAME="rankid">';
-		foreach($ranks as $rank)
-			$main_content .= '<OPTION value="'.htmlspecialchars($rank['0']).'">'.htmlspecialchars($rank['1']);
-		$main_content .= '</SELECT>&nbsp;&nbsp;&nbsp;<INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18></TD><TR>
-		</TABLE></FORM><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-		$main_content .= 'Error. You are not a leader or vice leader in guild '.htmlspecialchars($guild->getName()).'.<FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></FORM>';
-	}
-}
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show guild page
-if($action == 'deleteinvite')
-{
-	//set rights in guild
-	$guild_id = (int) $_REQUEST['guild'];
-	$name = $_REQUEST['name'];
-	if(!$logged)
-		$guild_errors[] = 'You are not logged in. You can\'t delete invitations.';
-	if(!check_name($name))
-		$guild_errors[] = 'Invalid name format.';
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		$rank_list = $guild->getGuildRanksList();
-		$guild_leader = FALSE;
-		$guild_vice = FALSE;
 		$account_players = $account_logged->getPlayers();
 		foreach($account_players as $player)
 		{
 			$player_rank = $player->getRank();
-			if(!empty($player_rank))
-			{
-				foreach($rank_list as $rank_in_guild)
+			if(empty($player_rank))
+				if($player->getLevel() >= $config['site']['guild_need_level'])
+					if(!$config['site']['guild_need_pacc'] || $account_logged->isPremium())
+						$array_of_player_nig[] = $player->getName();
+		}
+	}
+	if(count($array_of_player_nig) == 0)
+		$guild_errors[] = 'On your account all characters are in guilds or have too low level to create new guild.';
+	if($todo == "save") {
+		if(!check_guild_name($guild_name)) {
+			$guild_errors[] = 'Invalid guild name format.';
+		}
+		if(!check_name($leader)) {
+			$guild_errors[] = 'Invalid character name format.';
+		}
+		if(empty($guild_errors)) {
+			$player = new Player();
+			$player->find($leader);
+			if(!$player->isLoaded())
+				$guild_errors[] = 'Character <b>'.htmlspecialchars($leader).'</b> doesn\'t exist.';
+		}
+		if(empty($guild_errors)) {
+			$guild = new Guild();
+			$guild->find($guild_name);
+			if($guild->isLoaded())
+				$guild_errors[] = 'Guild <b>'.htmlspecialchars($guild_name).'</b> already exist. Select other name.';
+		}
+		if(empty($guild_errors)) {
+			$bad_char = TRUE;
+			foreach($array_of_player_nig as $nick_from_list)
+				if($nick_from_list == $player->getName())
+					$bad_char = FALSE;
+			if($bad_char)
+				$guild_errors[] = 'Character <b>'.htmlspecialchars($leader).'</b> isn\'t on your account or is already in guild.';
+		}
+		if(empty($guild_errors)) {
+			if($player->getLevel() < $config['site']['guild_need_level'])
+				$guild_errors[] = 'Character <b>'.htmlspecialchars($leader).'</b> has too low level. To create guild you need character with level <b>'.$config['site']['guild_need_level'].'</b>.';
+			if($config['site']['guild_need_pacc'] && !$account_logged->isPremium())
+				$guild_errors[] = 'Character <b>'.htmlspecialchars($leader).'</b> is on FREE account. To create guild you need PREMIUM account.';
+		}
+		if(empty($guild_errors)) {
+			if (!$account_logged->isValidPassword($guild_password))
+				$guild_errors[] = 'Wrong password, please check it and try again.';
+		}
+	}
+	
+	if(!empty($guild_errors)) {
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+							<div class="Text" >Error</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td>';
+									foreach($guild_errors as $guild_error)
+										$main_content .= '<p>'.$guild_error.'</p>';
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>
+			<TABLE BORDER=0 WIDTH=100%>
+				<TR>
+					<TD ALIGN=center>
+						<table border="0" cellspacing="0" cellpadding="0" >
+							<form action="?subtopic=guilds" method="post" >
+								<tr>
+									<td style="border:0px;" >';
+									if ($logged)
+										if(count($array_of_player_nig) > 0)
+											$main_content .= '
+												<input type="hidden" name=action value=create >';
+									$main_content .= '
+										<input type="hidden" name=name value="'.$guild_name.'" >
+										<input type="hidden" name=leader value="'.$leader.'" >
+										<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+											<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+												<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+											</div>
+										</div>
+									</td>
+								</tr>
+							</form>
+						</table>
+					</TD>
+				</TR>
+			</TABLE>';
+	} else {
+		if($todo == "save")
+		{
+			$new_guild = new Guild();
+			$new_guild->setCreationData(time());
+			$new_guild->setName($guild_name);
+			$new_guild->setOwner($player);
+			$new_guild->setDescription('New guild. Leader must edit this text :)');
+			$new_guild->setGuildLogo('image/gif', Website::getFileContents('./images/default_guild_logo.gif'));
+			
+			$new_guild->save();
+			$ranks = $new_guild->getGuildRanksList(true);
+			foreach($ranks as $rank)
+				if($rank->getLevel() == 3)
 				{
-					if($rank_in_guild->getId() == $player_rank->getId())
-					{
-						$players_from_account_in_guild[] = $player->getName();
-						if($player_rank->getLevel() > 1)
-						{
-							$guild_vice = TRUE;
-							$level_in_guild = $player_rank->getLevel();
-						}
-						if($guild->getOwner()->getId() == $player->getId())
-						{
-							$guild_vice = TRUE;
-							$guild_leader = TRUE;
-						}
-					}
+					$player->setRank($rank);
+					$player->save();
 				}
-			}
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+								<div class="Text" >Guild Founded!</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>You have founded the '.htmlspecialchars($guild_name).'. Now go ahead and invite the first members.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><br>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$guild_name.'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Continue" alt="Continue" src="'.$layout_name.'/images/buttons/_sbutton_continue.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		} else {
+			#form to create
+			$main_content .= 'Do you want to found a new guild? none of your characters may hold one of the two highest ranks in any other guild.<BR><BR>Now enter the name of the new guild, specify the name of your character that should become the first leader and confirm with your account password. Then click on "Submit". Note that the first two data cannot be changed later.<BR><BR>';
+			$main_content .= '
+				<FORM ACTION="?subtopic=guilds" METHOD="post">
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+								<div class="Text" >Found Guild</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<TR>
+											<TD BGCOLOR=#D4C0A1>
+												<TABLE BORDER=0 CELLPADDING=1>
+													<TR>
+														<TD>Guild Name:</TD>
+														<TD><INPUT NAME="name" VALUE="'.$_REQUEST['name'].'" SIZE=30 MAXLENGTH=29></TD>
+													</TR>
+													<TR>
+														<TD>Leader:</TD>
+														<TD>
+															<SELECT NAME="leader">';
+																if(count($array_of_player_nig) > 0) {
+																	sort($array_of_player_nig);
+																	foreach($array_of_player_nig as $nick)
+																		$main_content .= '<OPTION>'.htmlspecialchars($nick).'</OPTION>';
+																}
+														$main_content .= '
+															</SELECT>
+														</TD>
+													</TR>
+													<TR>
+														<TD>Password:</TD>
+														<TD><INPUT TYPE=password NAME="password" SIZE=30 MAXLENGTH=29></TD>
+													</TR>
+												</TABLE>
+											</TD>
+										</TR>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center><IMG SRC="'.$layout_name.'/images/general/blank.gif" WIDTH=120 HEIGHT=1 BORDER=0><BR></TD>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<tr>
+									<td style="border:0px;" >
+										<input type="hidden" name="todo" value="save" >
+										<input type="hidden" name="action" value="create" >
+										<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+											<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+												<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+											</div>
+										</div>
+									</td>
+								<tr>
+							</form>
+							</table>
+						</TD>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+						<TD ALIGN=center><IMG SRC="'.$layout_name.'/images/general/blank.gif" WIDTH=120 HEIGHT=1 BORDER=0><BR></TD>
+					</TR>
+				</TABLE>';
 		}
-	}
-	if(empty($guild_errors))
-	{
-		$player = new Player();
-		$player->find($name);
-		if(!$player->isLoaded())
-			$guild_errors[] = 'Player with name <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
-	}
-	if(!$guild_vice)
-		$guild_errors[] = 'You are not a leader or vice leader of guild <b>'.htmlspecialchars($guild->getName()).'</b>.';
-	if(empty($guild_errors))
-	{
-		$invited_list = $guild->listInvites();
-		if(count($invited_list) > 0)
-		{
-			$is_invited = FALSE;
-			foreach($invited_list as $invited)
-				if($invited->getName() == $player->getName())
-					$is_invited = TRUE;
-			if(!$is_invited)
-				$guild_errors[] = '<b>'.htmlspecialchars($player->getName()).'</b> isn\'t invited to your guild.';
-		}
-		else
-			$guild_errors[] = 'No one is invited to your guild.';
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error;
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-	{
-		if($_REQUEST['todo'] == 'save')
-		{
-			$guild->deleteInvite($player);
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Delete player invitation</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Player with name <b>'.htmlspecialchars($player->getName()).'</b> has been deleted from "invites list".</TD></TR></TABLE><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-		}
-		else
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Delete player invitation</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Are you sure you want to delete player with name <b>'.htmlspecialchars($player->getName()).'</b> from "invites list"?</TD></TR></TABLE><br/><center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><TR><FORM ACTION="?subtopic=guilds&action=deleteinvite&guild='.$guild_id.'&name='.urlencode($player->getName()).'&todo=save" METHOD=post><TD align="right" width="50%"><INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18>&nbsp;&nbsp;</TD></FORM><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TD>&nbsp;&nbsp;<INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></TD></TR></FORM></TABLE></center>';
 	}
 }
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show guild page
-if($action == 'invite')
-{
+if ($action == "invite") {
 	//set rights in guild
-	$guild_id = (int) $_REQUEST['guild'];
-	$name = $_REQUEST['name'];
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$name = $_REQUEST['character'];
 	if(!$logged)
 		$guild_errors[] = 'You are not logged in. You can\'t invite players.';
 	if(empty($guild_errors))
 	{
 		$guild = new Guild();
-		$guild->load($guild_id);
+		$guild->loadByName($guild_name);
 		if(!$guild->isLoaded())
 			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
 	}
@@ -674,8 +1136,8 @@ if($action == 'invite')
 		}
 	}
 	if(!$guild_vice)
-		$guild_errors[] = 'You are not a leader or vice leader of guild ID <b>'.$guild_id.'</b>.';
-	if($_REQUEST['todo'] == 'save')
+		$guild_errors[] = 'You are not a leader or vice leader of guild ID <b>'.$guild_name.'</b>.';
+	if($_REQUEST['invitation'] == 'yes')
 	{
 		if(!check_name($name))
 			$guild_errors[] = 'Invalid name format.';
@@ -684,12 +1146,12 @@ if($action == 'invite')
 			$player = new Player();
 			$player->find($name);
 			if(!$player->isLoaded())
-				$guild_errors[] = 'Player with name <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
+				$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
 			else
 			{
 				$rank_of_player = $player->getRank();
 				if(!empty($rank_of_player))
-					$guild_errors[] = 'Player with name <b>'.htmlspecialchars($name).'</b> is already in guild. He must leave guild before you can invite him.';
+					$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> is already in guild. He must leave guild before you can invite him.';
 			}
 		}
 		if(empty($guild_errors))
@@ -701,281 +1163,280 @@ if($action == 'invite')
 						$guild_errors[] = '<b>'.htmlspecialchars($player->getName()).'</b> is already invited to your guild.';
 		}
 	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error;
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
+	if($_REQUEST['invitation'] == 'no') {
+		$player_remove_invite = $_REQUEST['character'];
+		$player_noinvite = new Player();
+		$player_noinvite->find($player_remove_invite);
+		if($player_noinvite->isLoaded())
+			$player_noinvite_id = $player_noinvite->getId();
+		
 	}
-	else
-		if($_REQUEST['todo'] == 'save')
-		{
+	
+	if(!empty($guild_errors)) {
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Error</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td class="red" >';
+										foreach($guild_errors as $guild_error)
+											$main_content .= '<p>'.$guild_error;
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>';
+	} else {
+		if($_REQUEST['invitation'] == 'yes') {
 			$guild->invite($player);
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Invite player</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Player with name <b>'.htmlspecialchars($player->getName()).'</b> has been invited to your guild.</TD></TR></TABLE><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
+			//mensagem do char invitado
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+								<div class="Text" >Character Invited</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td><div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>'.htmlspecialchars($player->getName()).' has been invited.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<BR>';
 		}
-		else
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Invite player</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%><FORM ACTION="?subtopic=guilds&action=invite&guild='.$guild_id.'&todo=save" METHOD=post>Invite player with name:&nbsp;&nbsp;<INPUT TYPE="text" NAME="name">&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18></FORM></TD></TD></TR></TR></TABLE><br/><center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><TR><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TD><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></TD></TR></FORM></TABLE></center>';
+		if($_REQUEST['invitation'] == 'no') {
+			$guild->deleteInvite($player_noinvite);
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Invitation Cancelled</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>The invitation of '.$player_remove_invite.' has been cancelled.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<BR>';
+		}
+	}
+		$main_content .= '
+			Enter the name of a character you want to invite to your guild and click on "Submit".<BR><BR>';
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+							<div class="Text" >Invite Character</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<TR>
+										<TD BGCOLOR=#D4C0A1>
+											<FORM ACTION="?subtopic=guilds" METHOD=post>
+												<TABLE BORDER=0 CELLPADDING=1>
+													<TR>
+														<TD>Name:</TD>
+														<TD><INPUT NAME="character" VALUE="" SIZE=30 MAXLENGTH=30></TD>
+														<TD WIDTH=100% ALIGN=right>
+															<table border="0" cellspacing="0" cellpadding="0" >
+																<tr>
+																	<td style="border:0px;" >
+																		<input type="hidden" name=action value=invite >
+																		<input type="hidden" name=invitation value=yes >
+																		<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																		<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																			<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																				<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+																			</div>
+																		</div>
+																	</td>													
+																</tr>
+															</table>
+														</TD>
+													</TR>
+												</TABLE>
+											</form>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>';
+		$invited_list = $guild->listInvites();
+		if(count($invited_list) > 0) {
+			$main_content .= '
+				<BR>
+				If you want to cancel an invitation, select the according character and click on "Submit".<BR><BR>
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Cancel Invitation</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<TR>
+											<TD BGCOLOR=#D4C0A1>
+												<FORM ACTION="?subtopic=guilds" METHOD=post>
+													<TABLE BORDER=0 CELLPADDING=1>
+														<TR>
+															<TD>Name:</TD>
+															<TD>
+																<SELECT NAME="character">';
+															foreach($invited_list as $invited)
+																$main_content .= '
+																	<OPTION VALUE="'.$invited->getName().'">'.$invited->getName().'</OPTION>';
+															$main_content .= '
+																</SELECT>
+															</TD>
+															<TD WIDTH=100% ALIGN=right>
+																<table border="0" cellspacing="0" cellpadding="0" >
+																	<tr>
+																		<td style="border:0px;" >
+																			<input type="hidden" name=action value=invite >
+																			<input type="hidden" name=invitation value=no >
+																			<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																			<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																				<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																					<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+																				</div>
+																			</div>
+																		</td>														
+																	<tr>
+																</table>
+															</TD>
+														</TR>
+													</TABLE>
+												</FORM>
+											</TD>
+										</TR>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>';
+		}
+		
+		$main_content .= '
+			<BR>
+			<TABLE BORDER=0 WIDTH=100%>
+				<TR>
+					<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+							<form action="?subtopic=guilds&action=view" method="post" >
+								<tr>
+									<td style="border:0px;" >
+										<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+										<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+											<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+												<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+											</div>
+										</div>
+									</td>
+								</tr>
+							</form>
+						</table>
+					</TD>
+				</TR>
+			</TABLE>';
 }
-
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show guild page
-if($action == 'acceptinvite')
-{
+if($action == "leave") {
 	//set rights in guild
-	$guild_id = (int) $_REQUEST['guild'];
-	$name = $_REQUEST['name'];
-	if(!$logged)
-		$guild_errors[] = 'You are not logged in. You can\'t accept invitations.';
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-
-	if($_REQUEST['todo'] == 'save')
-	{
-		if(!check_name($name))
-			$guild_errors[] = 'Invalid name format.';
-		if(empty($guild_errors))
-		{
-			$player = new Player();
-			$player->find($name);
-			if(!$player->isLoaded())
-			{
-				$guild_errors[] = 'Player with name <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
-			}
-			else
-			{
-				$rank_of_player = $player->getRank();
-				if(!empty($rank_of_player))
-				{
-					$guild_errors[] = 'Character with name <b>'.htmlspecialchars($name).'</b> is already in guild. You must leave guild before you join other guild.';
-				}
-			}
-		}
-	}
-	if($_REQUEST['todo'] == 'save')
-	{
-		if(empty($guild_errors))
-		{
-			$is_invited = FALSE;
-			$invited_list = $guild->listInvites();
-			if(count($invited_list) > 0)
-			{
-				foreach($invited_list as $invited)
-				{
-					if($invited->getName() == $player->getName())
-					{
-						$is_invited = TRUE;
-					}
-				}
-			}
-			if(!$is_invited)
-			{
-				$guild_errors[] = 'Character '.htmlspecialchars($player->getName()).' isn\'t invited to guild <b>'.htmlspecialchars($guild->getName()).'</b>.';
-			}
-		}
-	}
-	else
-	{
-		if(empty($guild_errors))
-		{
-			$acc_invited = FALSE;
-			$account_players = $account_logged->getPlayers();
-			$invited_list = $guild->listInvites();
-			if(count($invited_list) > 0)
-			{
-				foreach($invited_list as $invited)
-				{
-					foreach($account_players as $player_from_acc)
-					{
-						if($invited->getName() == $player_from_acc->getName())
-						{
-							$acc_invited = TRUE;
-							$list_of_invited_players[] = $player_from_acc->getName();
-						}
-					}
-				}
-			}
-		}
-		if(!$acc_invited)
-		{
-			$guild_errors[] = 'Any character from your account isn\'t invited to <b>'.htmlspecialchars($guild->getName()).'</b>.';
-		}
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-		{
-			$main_content .= '<li>'.$guild_error;
-		}
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-	{
-		if($_REQUEST['todo'] == 'save')
-		{
-			$guild->acceptInvite($player);
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Accept invitation</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Player with name <b>'.htmlspecialchars($player->getName()).'</b> has been added to guild <b>'.htmlspecialchars($guild->getName()).'</b>.</TD></TR></TABLE><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-		}
-		else
-		{
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Accept invitation</B></TD></TR>';
-			$main_content .= '<TR BGCOLOR='.$config['site']['lightborder'].'><TD WIDTH=100%>Select character to join guild:</TD></TR>';
-			$main_content .= '<TR BGCOLOR='.$config['site']['darkborder'].'><TD>
-			<form action="?subtopic=guilds&action=acceptinvite&guild='.$guild_id.'&todo=save" METHOD="post">';
-			sort($list_of_invited_players);
-			foreach($list_of_invited_players as $invited_player_from_list)
-			{
-				$main_content .= '<input type="radio" name="name" value="'.htmlspecialchars($invited_player_from_list).'" />'.htmlspecialchars($invited_player_from_list).'<br>';
-			}
-			$main_content .= '<br><INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18></form></TD></TR></TABLE><br/><center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><TR><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TD><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></TD></TR></FORM></TABLE></center>';
-		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show guild page
-if($action == 'kickplayer')
-{
-	//set rights in guild
-	$guild_id = (int) $_REQUEST['guild'];
-	$name = $_REQUEST['name'];
-	if(!$logged)
-		$guild_errors[] = 'You are not logged in. You can\'t kick characters.';
-	if(!check_name($name))
-		$guild_errors[] = 'Invalid name format.';
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		$rank_list = $guild->getGuildRanksList();
-		$guild_leader = FALSE;
-		$guild_vice = FALSE;
-		$account_players = $account_logged->getPlayers();
-		foreach($account_players as $player)
-		{
-			$player_rank = $player->getRank();
-			if(!empty($player_rank))
-			{
-				foreach($rank_list as $rank_in_guild)
-				{
-					if($rank_in_guild->getId() == $player_rank->getId())
-					{
-						$players_from_account_in_guild[] = $player->getName();
-						if($player_rank->getLevel() > 1)
-						{
-							$guild_vice = TRUE;
-							$level_in_guild = $player_rank->getLevel();
-						}
-						if($guild->getOwner()->getId() == $player->getId())
-						{
-							$guild_vice = TRUE;
-							$guild_leader = TRUE;
-						}
-					}
-				}
-			}
-		}
-	}
-	if(empty($guild_errors))
-	{
-		if(!$guild_leader && $level_in_guild < 3)
-		{
-			$guild_errors[] = 'You are not a leader of guild <b>'.htmlspecialchars($guild->getName()).'</b>. You can\'t kick players.';
-		}
-	}
-	if(empty($guild_errors))
-	{
-		$player = new Player();
-		$player->find($name);
-		if(!$player->isLoaded())
-		{
-			$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
-		}
-		else
-		{
-			if($player->getRank()->getGuild()->getName() != $guild->getName())
-			{
-				$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> isn\'t from your guild.';
-			}
-		}
-	}
-	if(empty($guild_errors))
-	{
-		if($player->getRank()->getLevel() >= $level_in_guild && !$guild_leader)
-		{
-			$guild_errors[] = 'You can\'t kick character <b>'.htmlspecialchars($name).'</b>. Too high access level.';
-		}
-	}
-	if(empty($guild_errors))
-	{
-		if($guild->getOwner()->getName() == $player->getName())
-		{
-			$guild_errors[] = 'It\'s not possible to kick guild owner!';
-		}
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-		{
-			$main_content .= '<li>'.$guild_error;
-		}
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-		if($_REQUEST['todo'] == 'save')
-		{
-			$player->setRank();
-			$player->save();
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Kick player</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Player with name <b>'.htmlspecialchars($player->getName()).'</b> has been kicked from your guild.</TD></TR></TABLE><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-		}
-		else
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Kick player</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Are you sure you want to kick player with name <b>'.htmlspecialchars($player->getName()).'</b> from your guild?</TD></TR></TABLE><br/><center><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><TR><FORM ACTION="?subtopic=guilds&action=kickplayer&guild='.$guild_id.'&name='.urlencode($player->getName()).'&todo=save" METHOD=post><TD align="right" width="50%"><INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18>&nbsp;&nbsp;</TD></FORM><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TD>&nbsp;&nbsp;<INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></TD></TR></FORM></TABLE></center>';
-}
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//show guild page
-if($action == 'leaveguild')
-{
-	//set rights in guild
-	$guild_id = (int) $_REQUEST['guild'];
-	$name = $_REQUEST['name'];
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$name = $_REQUEST['character'];
 	if(!$logged)
 		$guild_errors[] = 'You are not logged in. You can\'t leave guild.';
 	if(empty($guild_errors))
 	{
 		$guild = new Guild();
-		$guild->load($guild_id);
+		$guild->loadByName($guild_name);
 		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
 	}
 
 	if(empty($guild_errors))
 	{
 		$guild_owner_id = $guild->getOwner()->getId();
-		if($_REQUEST['todo'] == 'save')
+		if($_REQUEST['leaveguild'] == 'yes')
 		{
 			if(!check_name($name))
 				$guild_errors[] = 'Invalid name format.';
@@ -1017,562 +1478,1288 @@ if($action == 'leaveguild')
 			}
 		}
 	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-	{
-		if($_REQUEST['todo'] == 'save')
-		{
+	if(!empty($guild_errors)) {
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Error</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td class="red" >';
+										foreach($guild_errors as $guild_error)
+											$main_content .= '<p>'.$guild_error;
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>';
+	} else {
+		if($_REQUEST['leaveguild'] == 'yes') {
 			$player->setRank();
 			$player->save();
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Leave guild</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%>Player with name <b>'.htmlspecialchars($player->getName()).'</b> leaved guild <b>'.htmlspecialchars($guild->getName()).'</b>.</TD></TR></TABLE><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-		}
-		else
-		{
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Leave guild</B></TD></TR>';
-			if(count($array_of_player_ig) > 0)
-			{
-				$main_content .= '<TR BGCOLOR='.$config['site']['lightborder'].'><TD WIDTH=100%>Select character to leave guild:</TD></TR>';
-				$main_content .= '<TR BGCOLOR='.$config['site']['darkborder'].'><TD>
-				<form action="?subtopic=guilds&action=leaveguild&guild='.$guild_id.'&todo=save" METHOD="post">';
-				sort($array_of_player_ig);
-				foreach($array_of_player_ig as $player_to_leave)
-					$main_content .= '<input type="radio" name="name" value="'.htmlspecialchars($player_to_leave).'" />'.htmlspecialchars($player_to_leave).'<br>';
-				$main_content .= '</TD></TR><br></TABLE>';
-			}
-			else
-				$main_content .= '<TR BGCOLOR='.$config['site']['lightborder'].'><TD WIDTH=100%>Any of your characters can\'t leave guild.</TD></TR>';
-			$main_content .= '<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><tr>';
-			if(count($array_of_player_ig) > 0)
-				$main_content .= '<td width="130" valign="top"><INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18></form></td>';
-			$main_content .= '<td><FORM ACTION="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18></FORM></td></tr></table>';
+			$main_content .= '				
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Guild Left</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td><div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>You have left the guild.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&page=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		} else {
+			$main_content .= '
+				The following of your characters are members of this guild. If you want to leave, select a character and click on "Submit".<BR><BR>';
+			$main_content .= '
+				<FORM ACTION="?subtopic=guilds" METHOD=post>
+					<div class="TableContainer" >
+						<table class="Table1" cellpadding="0" cellspacing="0" >
+							<div class="CaptionContainer" >
+								<div class="CaptionInnerContainer" > 
+									<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>				
+									<div class="Text" >Guild Members</div>
+									<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+									<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								</div>
+							</div>
+							<tr>
+								<td><div class="InnerTableContainer" >
+										<table style="width:100%;" >
+											<TR>';
+										if(count($array_of_player_ig) > 0) {
+											$main_content .= '
+												<TD BGCOLOR=#D4C0A1>';
+												sort($array_of_player_ig);
+												foreach($array_of_player_ig as $player_to_leave)
+													$main_content .= '										
+														<INPUT TYPE=radio NAME="character" VALUE="'.htmlspecialchars($player_to_leave).'" '.((count($array_of_player_ig) == 1) ? 'checked' : '').'>'.htmlspecialchars($player_to_leave).'<BR>';
+											$main_content .= '</TD>';
+										} else {
+											$main_content .= '<TD BGCOLOR=#D4C0A1>Any of your characters can\'t leave guild.</TD>';
+										}
+										$main_content .= '										
+											</TR>
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<BR>
+					<TABLE BORDER=0 WIDTH=100%>
+						<TR align="center">
+							<TD ALIGN=center>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=leave >
+											<input type="hidden" name="leaveguild" value="yes">
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+												</div>
+											</div>
+										</td>					
+									<tr>
+								</form>
+							</table>
+						</TD>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
 		}
 	}
 }
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//create guild
-if($action == 'createguild')
-{
-	$new_guild_name = trim($_REQUEST['guild']);
-	$name = $_REQUEST['name'];
-	$todo = $_REQUEST['todo'];
+if($action == "join") {
+	//set rights in guild
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$name = $_REQUEST['character'];
 	if(!$logged)
-		$guild_errors[] = 'You are not logged in. You can\'t create guild.';
-	if(empty($guild_errors)) 
+		$guild_errors[] = 'You are not logged in. You can\'t accept invitations.';
+	if(empty($guild_errors))
 	{
-		$account_players = $account_logged->getPlayers();
-		foreach($account_players as $player)
-		{
-			$player_rank = $player->getRank();
-			if(empty($player_rank))
-				if($player->getLevel() >= $config['site']['guild_need_level'])
-					if(!$config['site']['guild_need_pacc'] || $account_logged->isPremium())
-						$array_of_player_nig[] = $player->getName();
-		}
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
 	}
 
-	if(count($array_of_player_nig) == 0)
-		$guild_errors[] = 'On your account all characters are in guilds or have too low level to create new guild.';
-	if($todo == 'save')
+	if($_REQUEST['joinguild'] == 'yes')
 	{
-		if(!check_guild_name($new_guild_name))
-		{
-			$guild_errors[] = 'Invalid guild name format.';
-		}
 		if(!check_name($name))
-		{
-			$guild_errors[] = 'Invalid character name format.';
-		}
+			$guild_errors[] = 'Invalid name format.';
 		if(empty($guild_errors))
 		{
 			$player = new Player();
 			$player->find($name);
 			if(!$player->isLoaded())
-				$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
-		}
-		if(empty($guild_errors))
-		{
-			$guild = new Guild();
-			$guild->find($new_guild_name);
-			if($guild->isLoaded())
-				$guild_errors[] = 'Guild <b>'.htmlspecialchars($new_guild_name).'</b> already exist. Select other name.';
-		}
-		if(empty($guild_errors))
-		{
-			$bad_char = TRUE;
-			foreach($array_of_player_nig as $nick_from_list)
-				if($nick_from_list == $player->getName())
-					$bad_char = FALSE;
-			if($bad_char)
-				$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> isn\'t on your account or is already in guild.';
-		}
-		if(empty($guild_errors))
-		{
-			if($player->getLevel() < $config['site']['guild_need_level'])
-				$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> has too low level. To create guild you need character with level <b>'.$config['site']['guild_need_level'].'</b>.';
-			if($config['site']['guild_need_pacc'] && !$account_logged->isPremium())
-				$guild_errors[] = 'Character <b>'.htmlspecialchars($name).'</b> is on FREE account. To create guild you need PREMIUM account.';
-		}
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		unset($todo);
-	}
-
-	if($todo == 'save')
-	{
-		$new_guild = new Guild();
-		$new_guild->setCreationData(time());
-		$new_guild->setName($new_guild_name);
-		$new_guild->setOwner($player);
-		$new_guild->setDescription('New guild. Leader must edit this text :)');
-		$new_guild->setGuildLogo('image/gif', Website::getFileContents('./images/default_guild_logo.gif'));
-		
-		$new_guild->save();
-		$ranks = $new_guild->getGuildRanksList(true);
-		foreach($ranks as $rank)
-			if($rank->getLevel() == 3)
 			{
-				$player->setRank($rank);
-				$player->save();
-			}
-		$main_content .= '<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=4 WIDTH=100%><TR BGCOLOR='.$config['site']['vdarkborder'].'><TD CLASS=white><B>Create guild</B></TD></TR><TR BGCOLOR='.$config['site']['darkborder'].'><TD WIDTH=100%><b>Congratulations!</b><br/>You have created guild <b>'.htmlspecialchars($new_guild_name).'</b>. <b>'.htmlspecialchars($player->getName()).'</b> is leader of this guild. Now you can invite players, change picture, description and motd of guild. Press submit to open guild manager.</TD></TR></TABLE><br/><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=100%><FORM ACTION="?subtopic=guilds&action=show&guild='.$new_guild->getId().'" METHOD=post><TR><TD><center><INPUT TYPE=image NAME="Submit" ALT="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18></center></TD></TR></FORM></TABLE>';
-	}
-	else
-	{
-		$main_content .= 'To play on '.$config['server']['serverName'].' you need an account. 
-		All you have to do to create your new account is to enter your email address, password to new account, verification code from picture and to agree to the terms presented below. 
-		If you have done so, your account number, password and e-mail address will be shown on the following page and your account and password will be sent 
-		to your email address along with further instructions.<BR><BR>
-		<FORM ACTION="?subtopic=guilds&action=createguild&todo=save" METHOD=post>
-		<TABLE WIDTH=100% BORDER=0 CELLSPACING=1 CELLPADDING=4>
-		<TR><TD BGCOLOR="'.$config['site']['vdarkborder'].'" CLASS=white><B>Create an '.htmlspecialchars($config['server']['serverName']).' Account</B></TD></TR>
-		<TR><TD BGCOLOR="'.$config['site']['darkborder'].'"><TABLE BORDER=0 CELLSPACING=8 CELLPADDING=0>
-		  <TR><TD>
-		    <TABLE BORDER=0 CELLSPACING=5 CELLPADDING=0>';
-		$main_content .= '<TR><TD width="150" valign="top"><B>Leader: </B></TD><TD><SELECT name="name">';
-		if(count($array_of_player_nig) > 0)
-		{
-			sort($array_of_player_nig);
-			foreach($array_of_player_nig as $nick)
-				$main_content .= '<OPTION>'.htmlspecialchars($nick).'</OPTION>';
-		}
-		$main_content .= '</SELECT><BR><font size="1" face="verdana,arial,helvetica">(Name of leader of new guild.)</font></TD></TR>
-			<TR><TD width="150" valign="top"><B>Guild name: </B></TD><TD><INPUT NAME="guild" VALUE="" SIZE=30 MAXLENGTH=50><BR><font size="1" face="verdana,arial,helvetica">(Here write name of your new guild.)</font></TD></TR>
-			</TABLE>
-		  </TD></TR>
-		</TABLE></TD></TR>
-		</TABLE>
-		<BR>
-		<TABLE BORDER=0 WIDTH=100%>
-		  <TR><TD ALIGN=center>
-		    <IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=120 HEIGHT=1 BORDER=0><BR>
-		  </TD><TD ALIGN=center VALIGN=top>
-		    <INPUT TYPE=image NAME="Submit" SRC="'.$layout_name.'/images/buttons/sbutton_submit.gif" BORDER=0 WIDTH=120 HEIGHT=18>
-		    </FORM>
-		  </TD><TD ALIGN=center>
-		    <FORM  ACTION="?subtopic=guilds" METHOD=post>
-		    <INPUT TYPE=image NAME="Back" ALT="Back" SRC="'.$layout_name.'/images/buttons/sbutton_back.gif" BORDER=0 WIDTH=120 HEIGHT=18>
-		    </FORM>
-		  </TD><TD ALIGN=center>
-		    <IMG SRC="\layouts\tibiacom\images\blank.gif" WIDTH=120 HEIGHT=1 BORDER=0><BR>
-		  </TD></TR>
-		</TABLE>
-		</TD>
-		<TD><IMG SRC="'.$layout_name.'\layouts\tibiacom\images\blank.gif" WIDTH=10 HEIGHT=1 BORDER=0></TD>
-		</TR>
-		</TABLE>';
-	}
-}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'manager')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		if($logged)
-		{
-			$guild_leader_char = $guild->getOwner();
-			$rank_list = $guild->getGuildRanksList();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_vice = TRUE;
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
-			{
-				$main_content .= '<center><h2>Welcome to guild manager!</h2></center>Here you can change names of ranks, delete and add ranks, pass leadership to other guild member and delete guild.';
-				$main_content .= '<br/><br/><table style="clear:both" border=0 cellpadding=0 cellspacing=0 width="100%">
-				<tr bgcolor='.$config['site']['darkborder'].'><td width="170"><font color="red"><b>Option</b></font></td><td><font color="red"><b>Description</b></font></td></tr>
-				<tr bgcolor='.$config['site']['lightborder'].'><td width="170"><b><a href="?subtopic=guilds&guild='.$guild_id.'&action=passleadership">Pass Leadership</a></b></td><td><b>Pass leadership of guild to other guild member.</b></td></tr>
-				<tr bgcolor='.$config['site']['darkborder'].'><td width="170"><b><a href="?subtopic=guilds&guild='.$guild_id.'&action=deleteguild">Delete Guild</a></b></td><td><b>Delete guild, kick all members.</b></td></tr>
-				<tr bgcolor='.$config['site']['lightborder'].'><td width="170"><b><a href="?subtopic=guilds&guild='.$guild_id.'&action=changedescription">Change Description</a></b></td><td><b>Change description of guild.</b></td></tr>
-				<tr bgcolor='.$config['site']['darkborder'].'><td width="170"><b><a href="?subtopic=guilds&guild='.$guild_id.'&action=changemotd">Change MOTD</a></b></td><td><b>Change MOTD of guild.</b></td></tr>
-				<tr bgcolor='.$config['site']['lightborder'].'><td width="170"><b><a href="?subtopic=guilds&guild='.$guild_id.'&action=changelogo">Change guild logo</a></b></td><td><b>Upload new guild logo.</b></td></tr>
-				</table>';
-				$main_content .= '<br><div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Add new rank</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td width="120" valign="top">New rank name:</td><td> <form action="?subtopic=guilds&guild='.$guild_id.'&action=addrank" method="POST"><input type="text" name="rank_name" size="20"><input type="submit" value="Add"></form></td></tr>          </table>        </div>  </table></div></td></tr>';
-				$main_content .= '<center><h3>Change rank names and levels</h3></center><form action="?subtopic=guilds&action=saveranks&guild='.$guild_id.'" method=POST><table style="clear:both" border=0 cellpadding=0 cellspacing=0 width="100%"><tr bgcolor='.$config['site']['vdarkborder'].'><td rowspan="2" width="120" align="center"><font color="white"><b>Delete Rank</b></font></td><td rowspan="2" width="300"><font color="white"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name</b></font></td><td colspan="3" align="center"><font color="white"><b>Level of RANK in guild</b></font></td></tr><tr bgcolor='.$config['site']['vdarkborder'].'><td align="center" bgcolor="red"><font color="white"><b>Leader (3)</b></font></td><td align="center" bgcolor="yellow"><font color="black"><b>Vice (2)</b></font></td><td align="center" bgcolor="green"><font color="white"><b>Member (1)</b></font></td></tr>';
-				foreach($rank_list as $rank)
-				{
-					if(is_int($number_of_rows / 2)) { $bgcolor = $config['site']['darkborder']; } else { $bgcolor = $config['site']['lightborder']; } $number_of_rows++;
-					$main_content .= '<tr bgcolor="'.$bgcolor.'"><td align="center"><a href="?subtopic=guilds&guild='.$guild_id.'&action=deleterank&rankid='.urlencode($rank->getId()).'" border="0"><img src="'.$layout_name.'/images/news/delete.png" border="0" alt="Delete Rank"></a></td><td><input type="text" name="'.htmlspecialchars($rank->getId()).'_name" value="'.htmlspecialchars($rank->getName()).'" size="35"></td><td align="center"><input type="radio" name="'.$rank->getId().'_level" value="3"';
-					if($rank->getLevel() == 3)
-						$main_content .= ' checked="checked"';
-					$main_content .= ' /></td><td align="center"><input type="radio" name="'.$rank->getId().'_level" value="2"';
-					if($rank->getLevel() == 2)
-						$main_content .= ' checked="checked"';
-					$main_content .= ' /></td><td align="center"><input type="radio" name="'.$rank->getId().'_level" value="1"';
-					if($rank->getLevel() == 1)
-						$main_content .= ' checked="checked"';
-					$main_content .= ' /></td></tr>';
-				}
-				$main_content .= '<tr bgcolor='.$config['site']['vdarkborder'].'><td>&nbsp;</td><td>&nbsp;</td><td colspan="3" align="center"><input type="submit" value="Save All"></td></tr></table></form>';
-				$main_content .= '<h3>Ranks info:</h3><b>0. Owner of guild</b> - it\'s highest rank, only one player in guild may has this rank. Player with this rank can:
-				<li>Invite/Cancel Invitation/Kick Player from guild
-				<li>Change ranks of all players in guild
-				<li>Delete guild or pass leadership to other guild member
-				<li>Change names, levels(leader,vice,member), add and delete ranks
-				<li>Change MOTD, logo and description of guild<hr>
-				<b>3. Leader</b> - it\'s second rank in guild. Player with this rank can:
-				<li>Invite/Cancel Invitation/Kick Player from guild (only with lower rank than his)
-				<li>Change ranks of players with lower rank level ("vice leader", "member") in guild<hr>
-				<b>2. Vice Leader</b> - it\'s third rank in guild. Player with this rank can:
-				<li>Invite/Cancel Invitation
-				<li>Change ranks of players with lower rank level ("member") in guild<hr>
-				<b>1. Member</b> - it\'s lowest rank in guild. Player with this rank can:
-				<li>Be a member of guild';
-				$main_content .= '<br/><center><form action="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+				$guild_errors[] = 'Player with name <b>'.htmlspecialchars($name).'</b> doesn\'t exist.';
 			}
 			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-	}
-}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'changelogo')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-
-	$guild = new Guild();
-	$guild->load($guild_id);
-	if(!$guild->isLoaded())
-		$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	if(empty($guild_errors))
-	{
-		if($logged)
-		{
-			$guild_leader_char = $guild->getOwner();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_vice = TRUE;
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
 			{
-				$max_image_size_b = $config['site']['guild_image_size_kb'] * 1024;
-				if($_REQUEST['todo'] == 'save')
+				$rank_of_player = $player->getRank();
+				if(!empty($rank_of_player))
 				{
-					$file = $_FILES['newlogo'];
-					switch($file['error'])
-					{
-						case UPLOAD_ERR_OK:
-							break; // all ok
-						case UPLOAD_ERR_INI_SIZE:
-						case UPLOAD_ERR_FORM_SIZE:
-							$upload_errors[] = 'Image is too large';
-							break;
-						case UPLOAD_ERR_PARTIAL:
-							$upload_errors[] = 'Image was only partially uploaded';
-							break;
-						case UPLOAD_ERR_NO_FILE:
-							$upload_errors[] = 'No image was uploaded';
-							break;
-						case UPLOAD_ERR_NO_TMP_DIR:
-							$upload_errors[] = 'Upload folder not found';
-							break;
-						case UPLOAD_ERR_CANT_WRITE:
-							$upload_errors[] = 'Unable to write uploaded file';
-							break;
-						case UPLOAD_ERR_EXTENSION:
-							$upload_errors[] =  'Upload failed due to extension';
-							break;
-						default:
-							$upload_errors[] =  'Unknown error';
-					}
-					if(is_uploaded_file($file['tmp_name']))
-					{
-						if($file['size'] > $max_image_size_b)
-							$upload_errors[] = 'Uploaded image is too big. Size: <b>'.$file['size'].' bytes</b>, Max. size: <b>'.$max_image_size_b.' bytes</b>.';
-						$info = getimagesize($file['tmp_name']);
-						if(!$info)
-							$upload_errors[] = 'Uploaded file is not an image!';
-					}
-					else
-						$upload_errors[] = 'You didn\'t send file or file is too big. Limit: <b>'.$config['site']['guild_image_size_kb'].' KB</b>.';
-					//show errors or save file
-					if(!empty($upload_errors))
-					{
-						$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-						foreach($upload_errors as $guild_error)
-							$main_content .= '<li>'.$guild_error;
-						$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-					}
-					else
-					{
-						$guild->setGuildLogo($info['mime'], file_get_contents($file['tmp_name']));
-						$guild->save();
-					}
+					$guild_errors[] = 'Character with name <b>'.htmlspecialchars($name).'</b> is already in guild. You must leave guild before you join other guild.';
 				}
-				$main_content .= '<center><h2>Change guild logo</h2></center>Here you can change logo of your guild.<BR>Current logo: <img src="' . $guild->getGuildLogoLink() . '" HEIGHT="64" WIDTH="64"><BR><BR>';
-				$main_content .= '<form enctype="multipart/form-data" action="?subtopic=guilds&guild='.$guild_id.'&action=changelogo" method="POST">
-				<input type="hidden" name="todo" value="save" />
-				<input type="hidden" name="MAX_FILE_SIZE" value="'.$max_image_size_b.'" />
-				    Select new logo: <input name="newlogo" type="file" />
-				    <input type="submit" value="Send new logo" /></form>Only <b>jpg, gif, png, bmp</b> pictures. Max. size: <b>'.$config['site']['guild_image_size_kb'].' KB</b><br>';
-				$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=manager" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
 			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
 		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
 	}
-	if(!empty($guild_errors))
+	if($_REQUEST['joinguild'] == 'yes')
 	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'deleterank')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	$rank_to_delete = (int) $_REQUEST['rankid'];
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		if($logged)
+		if(empty($guild_errors))
 		{
-			$guild_leader_char = $guild->getOwner();
-			$rank_list = $guild->getGuildRanksList();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild->getOwner()->getId() == $player->getId())
-				{
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
+			$is_invited = FALSE;
+			$invited_list = $guild->listInvites();
+			if(count($invited_list) > 0)
 			{
-				$rank = new GuildRank();
-				$rank->load($rank_to_delete);
-				if(!$rank->isLoaded())
-					$guild_errors2[] = 'Rank with ID '.$rank_to_delete.' doesn\'t exist.';
-				else
+				foreach($invited_list as $invited)
 				{
-					if($rank->getGuild()->getId() != $guild->getId())
-						$guild_errors2[] = 'Rank with ID '.$rank_to_delete.' isn\'t from your guild.';
-					else
+					if($invited->getName() == $player->getName())
 					{
-						if(count($rank_list) < 2)
-							$guild_errors2[] = 'You have only 1 rank in your guild. You can\'t delete this rank.';
-						else
+						$is_invited = TRUE;
+					}
+				}
+			}
+			if(!$is_invited)
+			{
+				$guild_errors[] = 'Character '.htmlspecialchars($player->getName()).' isn\'t invited to guild <b>'.htmlspecialchars($guild->getName()).'</b>.';
+			}
+		}
+	} else
+	{
+		if(empty($guild_errors))
+		{
+			$acc_invited = FALSE;
+			$account_players = $account_logged->getPlayers();
+			$invited_list = $guild->listInvites();
+			if(count($invited_list) > 0)
+			{
+				foreach($invited_list as $invited)
+				{
+					foreach($account_players as $player_from_acc)
+					{
+						if($invited->getName() == $player_from_acc->getName())
 						{
-							$players_with_rank = $rank->getPlayersList();
-							$players_with_rank_number = count($players_with_rank);
-							if($players_with_rank_number > 0)
-							{
-								foreach($rank_list as $checkrank)
-									if($checkrank->getId() != $rank->getId())
-										if($checkrank->getLevel() <= $rank->getLevel())
-											$new_rank = $checkrank;
-								if(empty($new_rank))
-								{
-									$new_rank = new GuildRank();
-									$new_rank->setGuild($guild);
-									$new_rank->setLevel($rank->getLevel());
-									$new_rank->setName('New Rank level '.$rank->getLevel());
-									$new_rank->save();
-								}
-								foreach($players_with_rank as $player_in_guild)
-								{
-									$player_in_guild->setRank($new_rank);
-									$player_in_guild->save();
-								}
-							}
-							$rank->delete();
-							$saved = TRUE;
+							$acc_invited = TRUE;
+							$list_of_invited_players[] = $player_from_acc->getName();
 						}
 					}
 				}
-				if($saved)
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Rank Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Rank <b>'.htmlspecialchars($rank->getName()).'</b> has been deleted. Players with this rank has now other rank.</td></tr>          </table>        </div>  </table></div></td></tr>';
-				else
-				{
-					$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-					foreach($guild_errors2 as $guild_error) 
-						$main_content .= '<li>'.$guild_error.'</li>';
-					$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-				}
-				//back button
-				$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=manager" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
 			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
 		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
+		if(!$acc_invited)
+		{
+			$guild_errors[] = 'Any character from your account isn\'t invited to <b>'.htmlspecialchars($guild->getName()).'</b>.';
+		}
 	}
-	if(!empty($guild_errors))
+	if(!empty($guild_errors)) {
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Error</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td class="red" >';
+										foreach($guild_errors as $guild_error)
+											$main_content .= '<p>'.$guild_error;
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>';
+	}else
 	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+		if($_REQUEST['joinguild'] == 'yes') {
+			$guild->acceptInvite($player);
+			$main_content .= '				
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Guild Join</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td><div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>You have joined the guild.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		} else {
+			$main_content .= '
+				The following of your characters are invited for this guild. If you want to join, select a character and click on "Submit".<BR><BR>';
+			$main_content .= '
+				<FORM ACTION="?subtopic=guilds" METHOD=post>
+					<div class="TableContainer" >
+						<table class="Table1" cellpadding="0" cellspacing="0" >
+							<div class="CaptionContainer" >
+								<div class="CaptionInnerContainer" > 
+									<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>				
+									<div class="Text" >Join Guild</div>
+									<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+									<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								</div>
+							</div>
+							<tr>
+								<td><div class="InnerTableContainer" >
+										<table style="width:100%;" >
+											<TR>';
+										if(count($list_of_invited_players) > 0) {
+											$main_content .= '
+												<TD BGCOLOR=#D4C0A1>';
+												sort($list_of_invited_players);
+												foreach($list_of_invited_players as $invited_player_from_list)
+													$main_content .= '										
+														<INPUT TYPE=radio NAME="character" VALUE="'.htmlspecialchars($invited_player_from_list).'" '.((count($list_of_invited_players) == 1) ? 'checked' : '').'>'.htmlspecialchars($invited_player_from_list).'<BR>';
+											$main_content .= '</TD>';
+										} else {
+											$main_content .= '<TD BGCOLOR=#D4C0A1>Any of your characters can\'t join guild.</TD>';
+										}
+										$main_content .= '										
+											</TR>
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<BR>
+					<TABLE BORDER=0 WIDTH=100%>
+						<TR align="center">
+							<TD ALIGN=center>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=join >
+											<input type="hidden" name="joinguild" value="yes">
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+												</div>
+											</div>
+										</td>					
+									<tr>
+								</form>
+							</table>
+						</TD>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		}
 	}
 }
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'addrank')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	$ranknew = $_REQUEST['rank_name'];
-	if(empty($guild_errors))
-	{
-		if(!check_rank_name($ranknew))
-			$guild_errors[] = 'Invalid rank name format.';
-		if(!$logged)
-			$guild_errors[] = 'You are not logged.';
+if($action == "ranks") {
+	//set rights in guild
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$ranktorename = (int) $_REQUEST['ranktorename'];
+	$new_rankname = (string) trim($_REQUEST['newrankname']);
+	$rank_name = $_REQUEST['rank_name'];
+	if(!$logged)
+		$guild_errors[] = 'You are not logged in. You can\'t accept invitations.';
+	if(empty($guild_errors)) {
 		$guild = new Guild();
-		$guild->load($guild_id);
+		$guild->loadByName($guild_name);
 		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-		if(empty($guild_errors))
-		{
-			$guild_leader_char = $guild->getOwner();
-			$rank_list = $guild->getGuildRanksList();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_vice = TRUE;
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
+	}
+	if(empty($guild_errors)) {
+		$guild_leader_char = $guild->getOwner();
+		$rank_list = $guild->getGuildRanksList();
+		$guild_leader = FALSE;
+		$account_players = $account_logged->getPlayers();
+		foreach($account_players as $player)
+			if($guild_leader_char->getId() == $player->getId())
 			{
-				$new_rank = new GuildRank();
-				$new_rank->setGuild($guild);
-				$new_rank->setLevel(1);
-				$new_rank->setName($ranknew);
-				$new_rank->save();
-				header("Location: ?subtopic=guilds&guild=".$guild_id."&action=manager");
-				$main_content .= 'New rank added. Redirecting...';
+				$guild_leader = TRUE;
+				$level_in_guild = 3;
 			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-		if(!empty($guild_errors))
-		{
-			$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-			foreach($guild_errors as $guild_error)
-				$main_content .= '<li>'.$guild_error;
-			$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-			$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=show" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+		if(!$guild_leader)
+			$guild_errors[] = 'You are not leader of the Guild.';
+	}
+	if($_REQUEST['changerankname'] == "yes") {
+		$rank_rename = new GuildRank();
+		$rank_rename->load($ranktorename);
+		if(!$rank_rename->isLoaded())
+			$guild_errors[] = 'This rank doesn\'t exist.';
+		if(!check_rank_name($new_rankname))
+			$guild_errors[] = 'Invalid rank name. Please use only a-Z, 0-9 and spaces.';
+	}
+	
+	if($_REQUEST['add_rank'] == "yes")
+		if(!check_rank_name($rank_name))
+			$guild_errors[] = 'Invalid rank name format.';
+			
+	if(!empty($guild_errors)) {
+		//errors
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Guild Rank Errors</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td class="red" >';
+										foreach($guild_errors as $guild_error)
+											$main_content .= '<p>'.$guild_error;
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>';
+	} else {
+		if($_REQUEST['changerankname'] == "yes") {
+			//renamed
+			$rank_rename->setName($new_rankname);
+			$rank_rename->save();
+			$main_content .= '				
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Guild Rank</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td><div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>The name of the rank was changed successfully.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+			} elseif($_REQUEST['add_rank'] == "yes") {
+			$new_rank = new GuildRank();
+			$new_rank->setGuild($guild);
+			$new_rank->setLevel(1);
+			$new_rank->setName($rank_name);
+			$new_rank->save();
+			
+			$main_content .= '				
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Guild Rank</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td><div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>The rank was added to Guild.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=view >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		} else {
+			$main_content .= '
+				To change the name of a rank, simply edit name in the corresponding field and confirm the change by clicking on "Submit".<BR>
+				<BR>
+				<div class="TableContainer" >
+					<table class="Table5" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+								<div class="Text" >Edit Guild Ranks</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>
+												<div class="TableShadowContainerRightTop" >
+													<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+												</div>
+												<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+													<div class="TableContentContainer" >
+														<table class="TableContent" width="100%" >
+															<TR>
+																<TD BGCOLOR=#D4C0A1>
+																	<TABLE BORDER=0 CELLPADDING=2>
+																		<FORM ACTION="?subtopic=guilds" METHOD=post>
+																			<TR>
+																				<TD>Set&nbsp;rank&nbsp;name</TD>
+																				<TD>
+																					<SELECT NAME="ranktorename">';
+																				$rank_number = 0;
+																				foreach($rank_list as $rank) {
+																					$rank_number++;
+																					$main_content .= '
+																						<OPTION VALUE="'.$rank->getID().'">'.$rank_number.': '.$rank->getName().'</OPTION>';
+																				}
+																				$main_content .= '
+																					</SELECT>
+																				</TD>
+																				<TD>to:</TD>
+																				<TD><INPUT NAME="newrankname" VALUE="'.$_REQUEST['newrankname'].'" SIZE=30 MAXLENGTH=29></TD>
+																				<TD WIDTH=100% ALIGN=right>
+																					<table border="0" cellspacing="0" cellpadding="0" >
+																						<tr>
+																							<td style="border:0px;" >
+																								<input type="hidden" name=action value=ranks >
+																								<input type="hidden" name="changerankname" value="yes">
+																								<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																								<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																									<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" >
+																										<div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																										<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+																									</div>
+																								</div>
+																							</td>																	
+																						<tr>
+																					</table>
+																				</TD>
+																			</TR>
+																		</FORM>
+																	</TABLE>
+																</TD>
+															</TR>
+														</table>
+													</div>
+												</div>
+												<div class="TableShadowContainer" >
+													<div class="TableBottomShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bm.gif);" >
+														<div class="TableBottomLeftShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bl.gif);" ></div>
+														<div class="TableBottomRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-br.gif);" ></div>
+													</div>
+												</div>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<BR>
+				<div class="TableContainer" >
+					<table class="Table5" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Add new rank</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>
+												<div class="TableShadowContainerRightTop" >
+													<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+												</div>
+												<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+													<div class="TableContentContainer" >
+														<table class="TableContent" width="100%">
+															<TR>
+																<TD BGCOLOR=#D4C0A1>
+																<FORM ACTION="?subtopic=guilds" METHOD=post>
+																	<TABLE BORDER=0 CELLPADDING=3>
+																		<tr>
+																			<td valign="middle">New rank name:</td>
+																			<td valign="middle">																				
+																				<input type="text" name="rank_name" size="50" value="'.$_REQUEST['rank_name'].'">																				
+																			</td>
+																			<td valign="middle">
+																					<input type="hidden" name=action value=ranks >
+																					<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+																					<input type="hidden" name="add_rank" value="yes">
+																					<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+																						<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" >
+																							<div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																							<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+																						</div>
+																					</div>
+																				</FORM>
+																			</td>
+																		</tr>
+																	</TABLE>
+																</TD>
+															</TR>
+														</table>
+													</div>
+												</div>
+												<div class="TableShadowContainer" >
+													<div class="TableBottomShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bm.gif);" >
+														<div class="TableBottomLeftShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-bl.gif);" ></div>
+														<div class="TableBottomRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-br.gif);" ></div>
+													</div>
+												</div>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</table>
+						</div>
+					</td>
+				</tr>
+				<br>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
 		}
 	}
-	else
-		if(!empty($guild_errors))
-		{
-			$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-			foreach($guild_errors as $guild_error)
-				$main_content .= '<li>'.$guild_error;
-			$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-			$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-		}
 }
 
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'changedescription')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(empty($guild_errors))
-	{
+#organize ranks
+
+if($action == "members") {
+	
+	#infos
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$player_name = $_REQUEST['character'];
+	$new_rank = (int) $_REQUEST['newrank'];
+	$newtitle = trim($_REQUEST['newtitle']);
+	
+	if(!$logged)
+		$guild_errors[] = 'You are not logged in. You can\'t change rank.';
+		
+	if(empty($guild_errors)) {
 		$guild = new Guild();
-		$guild->load($guild_id);
+		$guild->loadByName($guild_name);
 		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
 	}
-	if(empty($guild_errors))
-	{
-		if($logged)
+	
+	if(empty($guild_errors)) {
+		if($_REQUEST['promote'] == "yes")
+			if(!isset($_REQUEST['function']) || $_REQUEST['function'] == "")
+				$guild_errors[] = 'Select an action.';
+	}
+	
+	if(empty($guild_errors)) {
+		$rank_list = $guild->getGuildRanksList();
+		$guild_leader = FALSE;
+		$guild_vice = FALSE;
+		$account_players = $account_logged->getPlayers();
+		foreach($account_players as $player)
 		{
-			$guild_leader_char = $guild->getOwner();
+			$player_rank = $player->getRank();
+			if(!empty($player_rank))
+				foreach($rank_list as $rank_in_guild)
+					if($rank_in_guild->getId() == $player_rank->getId())
+					{
+						$players_from_account_in_guild[] = $player->getName();
+						if($player_rank->getLevel() > 1) {
+							$guild_vice = TRUE;
+							$level_in_guild = $player_rank->getLevel();
+						}
+						if($guild->getOwner()->getId() == $player->getId()) {
+							$guild_vice = TRUE;
+							$guild_leader = TRUE;
+						}
+					}
+		}
+		
+		//if(!$guild_vice)
+			//$guild_errors[] = 'You are not leader or vice leader in the Guild.';
+	}
+	
+	if(empty($guild_errors)) {
+		foreach($rank_list as $rank)
+		{
+			if($guild_leader || $rank->getLevel() < $level_in_guild)
+			{
+				$ranks[$rid]['0'] = $rank->getId();
+				$ranks[$rid]['1'] = $rank->getName();
+				$rid++;
+				$players_with_rank = $rank->getPlayersList();
+				if(count($players_with_rank) > 0)
+				{
+					foreach($players_with_rank as $player)
+					{
+						if($guild->getOwner()->getId() != $player->getId() || $guild_leader)
+						{
+							$players_with_lower_rank[$sid]['0'] = htmlspecialchars($player->getName());
+							$players_with_lower_rank[$sid]['1'] = htmlspecialchars($player->getName()).' ('.htmlspecialchars($rank->getName()).')';
+							$sid++;
+						}
+					}
+				}
+			}
+		}
+		
+		if($_REQUEST['promote'] == 'yes') {
+			$player_to_change = new Player();
+			$player_to_change->find($player_name);
+			if(!$player_to_change->isLoaded())
+				$guild_errors[] = 'Player with name '.htmlspecialchars($player_name).'</b> doesn\'t exist.';
+		}
+	}
+	
+	if(empty($guild_errors))
+		if($_REQUEST['promote'] == 'yes') {
+			if($_REQUEST['function'] == "setrank") {
+				$rank = new GuildRank();
+				$rank->load($new_rank);
+				if(!$rank->isLoaded())
+					$guild_errors[] = 'Rank with this ID doesn\'t exist.';
+			}
+			if($_REQUEST['function'] == "settile") {
+				if(strlen($newtitle) >= 30)
+					$guild_errors[] = 'Too long guild nick. Max. 30 chars, your: '.strlen($newtitle);
+			}
+			if($_REQUEST['function'] == "exclude") {
+				if($guild->getOwner()->getName() == $player_to_change->getName())
+					$guild_errors[] = 'It\'s not exclude guild owner!';
+				
+			}
+		}
+	
+	if(!empty($guild_errors)) {
+		//errors
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Members Errors</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td>';
+										foreach($guild_errors as $guild_error)
+											$main_content .= '<p>'.$guild_error;
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>
+			<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=members >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+	} else {
+		if($_REQUEST['promote'] == "yes") {
+			if($_REQUEST['function'] == "setrank") {
+				$player_to_change->setRank($rank);
+				$player_to_change->save();
+				$main_content .= '				
+					<div class="TableContainer" >
+						<table class="Table1" cellpadding="0" cellspacing="0" >
+							<div class="CaptionContainer" >
+								<div class="CaptionInnerContainer" > 
+									<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+									<div class="Text" >Members</div>
+									<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+									<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								</div>
+							</div>
+							<tr>
+								<td><div class="InnerTableContainer" >
+										<table style="width:100%;" >
+											<tr>
+												<td>Rank of player '.htmlspecialchars($player_to_change->getName()).' has been changed to '.htmlspecialchars($rank->getName()).'.</td>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div><BR>
+					<TABLE BORDER=0 WIDTH=100%>
+						<TR>
+							<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds&action=view" method="post" >
+										<tr>
+											<td style="border:0px;" >
+												<input type="hidden" name=action value=view >
+												<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+												<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>
+						</TR>
+					</TABLE>';
+				unset($players_with_lower_rank);
+				unset($ranks);
+				$rid = 0;
+				$sid= 0;
+				foreach($rank_list as $rank)
+				{
+					if($guild_leader || $rank->getLevel() < $level_in_guild)
+					{
+						$ranks[$rid]['0'] = $rank->getId();
+						$ranks[$rid]['1'] = $rank->getName();
+						$rid++;
+						$players_with_rank = $rank->getPlayersList();
+						if(count($players_with_rank) > 0)
+						{
+							foreach($players_with_rank as $player)
+							{
+								if($guild->getOwner()->getId() != $player->getId() || $guild_leader)
+								{
+									$players_with_lower_rank[$sid]['0'] = htmlspecialchars($player->getName());
+									$players_with_lower_rank[$sid]['1'] = htmlspecialchars($player->getName()).' ('.htmlspecialchars($rank->getName()).')';
+									$sid++;
+								}
+							}
+						}
+					}
+				}
+			}
+			if($_REQUEST['function'] == "settitle") {
+				$player_to_change->setGuildNick($newtitle);
+				$player_to_change->save();
+				$main_content .= '				
+					<div class="TableContainer" >
+						<table class="Table1" cellpadding="0" cellspacing="0" >
+							<div class="CaptionContainer" >
+								<div class="CaptionInnerContainer" > 
+									<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+									<div class="Text" >Members</div>
+									<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+									<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								</div>
+							</div>
+							<tr>
+								<td><div class="InnerTableContainer" >
+										<table style="width:100%;" >
+											<tr>
+												<td>Title of player '.htmlspecialchars($player_to_change->getName()).' has been changed.</td>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div><BR>
+					<TABLE BORDER=0 WIDTH=100%>
+						<TR>
+							<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds&action=view" method="post" >
+										<tr>
+											<td style="border:0px;" >
+												<input type="hidden" name=action value=view >
+												<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+												<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>
+						</TR>
+					</TABLE>';
+			}
+			if($_REQUEST['function'] == "exclude") {
+				$player_to_change->setRank();
+				$player_to_change->save();
+				$main_content .= '				
+					<div class="TableContainer" >
+						<table class="Table1" cellpadding="0" cellspacing="0" >
+							<div class="CaptionContainer" >
+								<div class="CaptionInnerContainer" > 
+									<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+									<div class="Text" >Members</div>
+									<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+									<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								</div>
+							</div>
+							<tr>
+								<td><div class="InnerTableContainer" >
+										<table style="width:100%;" >
+											<tr>
+												<td>Player with name '.htmlspecialchars($player->getName()).' has been excluded from your guild.</td>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div><BR>
+					<TABLE BORDER=0 WIDTH=100%>
+						<TR>
+							<TD ALIGN=center>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds&action=view" method="post" >
+										<tr>
+											<td style="border:0px;" >
+												<input type="hidden" name=action value=view >
+												<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+												<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>
+						</TR>
+					</TABLE>';
+			}
+		} else {
+			$main_content .= '
+			Select a member and the action you want to perform, then click on "Submit".<BR><BR>
+			<FORM ACTION="?subtopic=guilds" METHOD=post>
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+								<div class="Text" >Edit Members</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<TR>
+											<TD BGCOLOR=#D4C0A1>
+												<TABLE BORDER=0 CELLPADDING=1>
+													<TR>
+														<TD VALIGN=top>
+															<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=1>
+																<TR>
+																	<TD>Name:</TD>
+																	<TD>
+																		<SELECT NAME="character">';
+																	foreach($players_with_lower_rank as $player_to_list)
+																		$main_content .= '
+																			<option value="'.$player_to_list['0'].'">'.$player_to_list['1'].'</option>';
+																	$main_content .= '
+																		</SELECT>
+																	</TD>
+																</TR>
+															</TABLE>
+														</TD>
+														<TD>&#160;&#160;&#160;</TD>
+														<TD VALIGN=top>
+															<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=1>
+																<TR>
+																	<TD>Action:</TD>
+																	<TD><INPUT TYPE=radio NAME="function" VALUE="setrank" '.(($_REQUEST['function'] == "setrank") ? 'checked' : '').'>
+																		Set rank to
+																		<SELECT NAME="newrank">';
+																	foreach($ranks as $rank)
+																		$main_content .= '
+																			<option value="'.htmlspecialchars($rank['0']).'" '.(($_REQUEST['newrank'] == $rank['0'])).'>'.htmlspecialchars($rank['1']).'</option>';
+																	$main_content .= '
+																		</SELECT>
+																	</TD>
+																</TR>';
+														if($guild_leader) {
+															$main_content .= '
+																<TR>
+																	<TD></TD>
+																	<TD><INPUT TYPE=radio NAME="function" VALUE="settitle" '.(($_REQUEST['function'] == "settitle") ? 'checked' : '').'>
+																		Set title to
+																		<INPUT NAME="newtitle" SIZE=30 MAXLENGTH=29></TD>
+																</TR>';
+															$main_content .= '
+																<TR>
+																	<TD></TD>
+																	<TD><INPUT TYPE=radio NAME="function" VALUE="exclude" '.(($_REQUEST['function'] == "exclude") ? 'checked' : '').'>
+																		Exclude from guild </TD>
+																</TR>';
+														}
+														$main_content .= '
+															</TABLE>
+														</TD>
+													</TR>
+												</TABLE>
+											</TD>
+										</TR>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+			<BR>
+			<TABLE BORDER=0 WIDTH=100%>
+				<TR align="center">
+					<TD ALIGN=center>
+						<table border="0" cellspacing="0" cellpadding="0" >
+							<tr>
+								<td style="border:0px;" >
+									<input type="hidden" name=action value=members >
+									<input type="hidden" name="promote" value="yes">
+									<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+									<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+										<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+											<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+										</div>
+									</div>
+								</td>			
+							<tr>
+						</table>
+					</TD>
+					</FORM>
+					<TD ALIGN=center>
+						<table border="0" cellspacing="0" cellpadding="0" >
+							<form action="?subtopic=guilds&action=view" method="post" >
+								<tr>
+									<td style="border:0px;" >
+										<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+										<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+											<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+												<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+											</div>
+										</div>
+									</td>
+								</tr>
+							</form>
+						</table>
+					</TD>
+				</TR>
+			</TABLE>';
+		}
+	}
+	
+	
+	
+} #members condition
+
+if($action == "disband") {
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$password = (string) trim($_REQUEST['password']);
+	if(!$logged)
+		$guild_errors[] = 'You are not logged in. You can\'t disband this Guild.';
+	if(empty($guild_errors)) {
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
+	}
+	if(empty($guild_errors)) {
+		$guild_leader_char = $guild->getOwner();
 			$rank_list = $guild->getGuildRanksList();
 			$guild_leader = FALSE;
 			$account_players = $account_logged->getPlayers();
@@ -1583,368 +2770,842 @@ if($action == 'changedescription')
 					$guild_leader = TRUE;
 					$level_in_guild = 3;
 				}
-			if($guild_leader)
-			{
-				if($_REQUEST['todo'] == 'save')
-				{
-					$description = htmlspecialchars(substr(trim($_REQUEST['description']),0,$config['site']['guild_description_chars_limit']));
-					$guild->set('description', $description);
-					$guild->save();
-					$saved = TRUE;
-				}
-				$main_content .= '<center><h2>Change guild description</h2></center>';
-				if($saved)
-					$main_content .= '<center><font color="red" size="3"><b>CHANGES HAS BEEN SAVED!</b></font></center><br>';
-				$main_content .= 'Here you can change description of your guild.<BR>';
-				$main_content .= '<form enctype="multipart/form-data" action="?subtopic=guilds&guild='.$guild_id.'&action=changedescription" method="POST">
-				<input type="hidden" name="todo" value="save" />
-				    <textarea name="description" cols="60" rows="'.($config['site']['guild_description_lines_limit'] - 1).'">'.$guild->getDescription().'</textarea><br>
-				    (max. '.$config['site']['guild_description_lines_limit'].' lines, max. '.$config['site']['guild_description_chars_limit'].' chars) <input type="submit" value="Save description" /></form><br>';
-				$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=manager" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-		else
-		$guild_errors[] = 'You are not logged. You can\'t manage guild.';
+				if(!$guild_leader)
+					$guild_errors[] = 'You are not leader of Guild.';
 	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+	if(empty($guild_errors)) {
+		if($_REQUEST['disband'] == "yes")
+			if(!$account_logged->isValidPassword($password))
+				$guild_errors[] = 'Wrong password.';
+	}
+	if(!empty($guild_errors)) {
+		//errors
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+							<div class="Text" >Error</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td>';
+										foreach($guild_errors as $guild_error)
+											$main_content .= '<p>'.$guild_error;
+									$main_content .= '
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>
+			<TABLE BORDER=0 WIDTH=100%>
+						<TR>
+							<TD ALIGN=center>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds" method="post" >
+										<input type="hidden" name="action" value="disband">
+										<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+										<tr>
+											<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>
+						</TR>
+					</TABLE>';
+	} else {
+			if($_REQUEST['disband'] == "yes") {
+				$guild->delete();
+				$main_content .= '
+					<div class="TableContainer" >
+						<table class="Table1" cellpadding="0" cellspacing="0" >
+							<div class="CaptionContainer" >
+								<div class="CaptionInnerContainer" > 
+									<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+									<div class="Text" >Guild Disbanded</div>
+									<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+									<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+									<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								</div>
+							</div>
+							<tr>
+								<td>
+									<div class="InnerTableContainer" >
+										<table style="width:100%;" >
+											<tr>
+												<td>You have disbanded the '.$_REQUEST['GuildName'].'.</td>
+											</tr>
+										</table>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div><BR>
+					<TABLE BORDER=0 WIDTH=100%>
+						<TR>
+							<TD ALIGN=center>
+								<table border="0" cellspacing="0" cellpadding="0" >
+									<form action="?subtopic=guilds" method="post" >
+										<tr>
+											<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+													</div>
+												</div>
+											</td>
+										</tr>
+									</form>
+								</table>
+							</TD>
+						</TR>
+					</TABLE>';
+			} else {
+				$main_content .= '
+					Do you really want to disband your guild? Confirm this decision with your password and click on "Submit".<BR>
+					<BR>
+					<FORM ACTION="?subtopic=guilds" METHOD=post>
+						<div class="TableContainer" >
+							<table class="Table1" cellpadding="0" cellspacing="0" >
+								<div class="CaptionContainer" >
+									<div class="CaptionInnerContainer" > 
+										<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+										<div class="Text" >Disband Guild</div>
+										<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+										<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									</div>
+								</div>
+								<tr>
+									<td>
+										<div class="InnerTableContainer" >
+											<table style="width:100%;" >
+												<TR>
+													<TD BGCOLOR=#D4C0A1><TABLE BORDER=0 CELLPADDING=1>
+															<TR>
+																<TD>Password:</TD>
+																<TD><INPUT TYPE=password NAME="password" SIZE=30 MAXLENGTH=29></TD>
+															</TR>
+														</TABLE>
+													</TD>
+												</TR>
+											</table>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<BR>
+						<TABLE BORDER=0 WIDTH=100%>
+							<TR>
+								<TD ALIGN=center><IMG SRC="'.$layout_name.'/images/general/blank.gif" WIDTH=120 HEIGHT=1 BORDER=0><BR></TD>
+								<TD ALIGN=center><table border="0" cellspacing="0" cellpadding="0" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=action value=disband>
+											<input type="hidden" name="disband" value="yes">
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+												</div>
+											</div>
+										</td>					
+									<tr>
+								</form>
+							</table>
+						</TD>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds&action=view" method="post" >
+									<tr>
+										<td style="border:0px;" >
+											<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+											<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" >
+													<div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+						<TD ALIGN=center><IMG SRC="'.$layout_name.'/images/general/blank.gif" WIDTH=120 HEIGHT=1 BORDER=0><BR></TD>
+					</TR>
+				</TABLE>';
+			}
 	}
 }
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'passleadership')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	$pass_to = trim($_REQUEST['player']);
+if($action == "description") {
+	$guild_name = (string) $_REQUEST['GuildName'];
 	if(empty($guild_errors))
 	{
 		$guild = new Guild();
-		$guild->load($guild_id);
+		$guild->loadByName($guild_name);
 		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
+	}
+	if(empty($guild_errors)) {
+		$guild_leader_char = $guild->getOwner();
+		$rank_list = $guild->getGuildRanksList();
+		$guild_leader = FALSE;
+		$account_players = $account_logged->getPlayers();
+		foreach($account_players as $player)
+			if($guild->getOwner()->getId() == $player->getId()) {
+				$guild_vice = TRUE;
+				$guild_leader = TRUE;
+				$level_in_guild = 3;
+			}
+		if(!$guild_leader)
+			$guild_errors[] = 'You are not the Guild Leader.';
+	}
+	if(empty($guild_errors)) {
+		$max_image_size_b = $config['site']['guild_image_size_kb'] * 1024;
+		if($_REQUEST['guildlogo'] == "yes") {			
+			$file = $_FILES['newlogo'];
+		if(is_uploaded_file($file['tmp_name']))
+			switch($file['error']) {
+				case UPLOAD_ERR_OK:
+					break; // all ok
+				case UPLOAD_ERR_INI_SIZE:
+				case UPLOAD_ERR_FORM_SIZE:
+					$guild_errors[] = 'Image is too large';
+					break;
+				case UPLOAD_ERR_PARTIAL:
+					$guild_errors[] = 'Image was only partially uploaded';
+					break;
+				case UPLOAD_ERR_NO_TMP_DIR:
+					$guild_errors[] = 'Upload folder not found';
+					break;
+				case UPLOAD_ERR_CANT_WRITE:
+					$guild_errors[] = 'Unable to write uploaded file';
+					break;
+				case UPLOAD_ERR_EXTENSION:
+					$guild_errors[] =  'Upload failed due to extension';
+					break;
+				default:
+					$guild_errors[] =  'Unknown error';
+			}
+			if(is_uploaded_file($file['tmp_name'])) {
+				if($file['size'] > $max_image_size_b)
+					$guild_errors[] = 'Uploaded image is too big. Size: <b>'.$file['size'].' bytes</b>, Max. size: <b>'.$max_image_size_b.' bytes</b>.';
+				$info = getimagesize($file['tmp_name']);
+				if(!$info)
+					$guild_errors[] = 'Uploaded file is not an image!';
+			}
+		}
+	}
+	if(!empty($guild_errors)) {
+		if($_REQUEST['changedescription'] == "yes") {
+			//errors
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+								<div class="Text" >Guild Description Error</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>';
+											foreach($guild_errors as $guild_error)
+												$main_content .= '<p>'.$guild_error;
+										$main_content .= '
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		}
+		if($_REQUEST['guildlogo'] == "yes") {
+			//errors
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+								<div class="Text" >Guild Logo Error</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>';
+											foreach($guild_errors as $guild_error)
+												$main_content .= '<p>'.$guild_error;
+										$main_content .= '
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		}
+	} else {
+		if($_REQUEST['changedescription'] == "yes") {
+			$description = htmlspecialchars(substr(trim($_REQUEST['description']),0,$config['site']['guild_description_chars_limit']));
+			$guild->set('description', $description);
+			$guild->save();
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+								<div class="Text" >Guild Description Changed</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>Your Guild Description was changed succefully.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<input type="hidden" name="action" value="view">
+									<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		}
+		elseif($_REQUEST['guildlogo'] == "yes") {
+			if(!is_uploaded_file($file['tmp_name'])) {
+				$guild->setGuildLogo('image/gif', Website::getFileContents('./images/default_guild_logo.gif'));
+				$guild->save();
+			} else {
+				$guild->setGuildLogo($info['mime'], file_get_contents($file['tmp_name']));
+				$guild->save();
+			}
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+								<div class="Text" >Guild Logo Changed</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>Your Guild Logo was changed succefully.</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<input type="hidden" name="action" value="view">
+									<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+		}
+		else {
+				$main_content .= 'If you want to change the description or the URL of the official homepage of your guild, edit the corresponding field and click on the "Submit" button.<BR><BR>';
+	//formulario com as ações
+	$main_content .= '
+		<FORM ACTION="?subtopic=guilds" METHOD=post>
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+							<div class="Text" >Change Description</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td valign="top">Description:</td>
+										<td><textarea name="description" cols="60" rows="15">'.$guild->getDescription().'</textarea></td>
+										<td align="right" valign="bottom">
+											<table border="0" cellspacing="0" cellpadding="0" >
+												<tr>
+													<td style="border:0px;" >
+														<input type="hidden" name="changedescription" value="yes">
+														<input type="hidden" name="action" value="description">
+														<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+														<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+															<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+															</div>
+														</div>
+													</td>
+												</tr>
+												</form>
+											</table>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>
+			If you want to change the logo of your guild, enter the path to a 64*64 pixels GIF icon and click on the "Submit" button.<BR>Leave the path empty if you want to use the default logo.<BR><BR>
+			<FORM ACTION="?subtopic=guilds" METHOD=post enctype="multipart/form-data">
+			<div class="TableContainer" >
+				<table class="Table1" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+							<div class="Text" >Guild Logo</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td>
+							<div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td valign="top">Current logo:</td>
+										<td><IMG SRC="'. $guild->getGuildLogoLink() .'" WIDTH=64 HEIGHT=64></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td valign="top">New logo:</td>
+										<td><input type="file" name="newlogo"></td>
+										<td align="right">
+											<table border="0" cellspacing="0" cellpadding="0" >
+												<tr>
+													<td style="border:0px;" >
+														<input type="hidden" name="guildlogo" value="yes">
+														<input type="hidden" name="action" value="description">
+														<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+														<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+															<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+																<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+															</div>
+														</div>
+													</td>
+												</tr>
+												</form>
+											</table>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div><BR>
+			<TABLE BORDER=0 WIDTH=100%>
+				<TR align="center">
+					<TD ALIGN=center>
+						<table border="0" cellspacing="0" cellpadding="0" >
+							<form action="?subtopic=guilds&action=view" method="post" >
+								<tr>
+									<td style="border:0px;" >
+										<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+										<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+											<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+												<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+											</div>
+										</div>
+									</td>
+								</tr>
+							</form>
+						</table>
+					</TD>
+				</TR>
+			</TABLE>';
+		}
+	}
+}
+if($action == "resignleadership") {
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$pass_to = (string) $_REQUEST['character'];
+	$password = trim($_REQUEST['password']);
+	if(empty($guild_errors))
+	{
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
 	}
 	if(empty($guild_errors))
 	{
-		if($_POST['todo'] == 'save')
+		if($_POST['resign'] == 'yes')
 		{
+			if(!$account_logged->isValidPassword($password))
+				$guild_errors[] = 'Password is wrong.';
 			if(!check_name($pass_to))
-				$guild_errors2[] = 'Invalid player name format.';
-			if(empty($guild_errors2))
+				$guild_errors[] = 'Invalid player name format.';
+			if(empty($guild_errors))
 			{
 				$to_player = new Player();
 				$to_player->find($pass_to);
 				if(!$to_player->isLoaded())
-					$guild_errors2[] = 'Player with name <b>'.htmlspecialchars($pass_to).'</b> doesn\'t exist.';
-				if(empty($guild_errors2))
+					$guild_errors[] = 'Player with name <b>'.htmlspecialchars($pass_to).'</b> doesn\'t exist.';
+				if(empty($guild_errors))
 				{
 					$to_player_rank = $to_player->getRank();
 					if(!empty($to_player_rank))
 					{
 						$to_player_guild = $to_player_rank->getGuild();
 						if($to_player_guild->getId() != $guild->getId())
-							$guild_errors2[] = 'Player with name <b>'.htmlspecialchars($to_player->getName()).'</b> isn\'t from your guild.';
+							$guild_errors[] = 'Player with name <b>'.htmlspecialchars($to_player->getName()).'</b> isn\'t from your guild.';
 					}
 					else
-						$guild_errors2[] = 'Player with name <b>'.htmlspecialchars($to_player->getName()).'</b> isn\'t from your guild.';
+						$guild_errors[] = 'Player with name <b>'.htmlspecialchars($to_player->getName()).'</b> isn\'t from your guild.';
 				}
 			}
 		}
 	}
-	if(empty($guild_errors) && empty($guild_errors2))
-	{
-		if($logged)
-		{
+	if(empty($guild_errors)) {
+		if($logged) {
 			$guild_leader_char = $guild->getOwner();
 			$guild_leader = FALSE;
 			$account_players = $account_logged->getPlayers();
 			foreach($account_players as $player)
-				if($guild_leader_char->getId() == $player->getId())
-				{
+				if($guild_leader_char->getId() == $player->getId()) {
 					$guild_vice = TRUE;
 					$guild_leader = TRUE;
 					$level_in_guild = 3;
 				}
-			if($guild_leader)
-			{
-				if($_POST['todo'] == 'save')
-				{
-					$guild->setOwner($to_player);
-					$guild->save();
+			if($guild_leader) {
+				if($_POST['resign'] == 'yes') {
+					$newleaderID = $to_player->getID();
+					$oldleaderID = $guild_leader_char->getId();
+					$newrank = $guild_leader_char->getRank()->getID();
+					$oldrank = $to_player_rank->getID();
+					$up = $SQL->query("UPDATE `guild_membership` SET `rank_id` = '$newrank' WHERE `player_id` = '$newleaderID'");
+					if($up)
+						$up2 = $SQL->query("UPDATE `guild_membership` SET `rank_id` = '$oldrank' WHERE `player_id` = '$oldleaderID'");
+					if($up2) {
+						$guild->setOwner($to_player);
+						$guild->save();
+					}
 					$saved = TRUE;
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td><b>'.htmlspecialchars($to_player->getName()).'</b> is now a Leader of <b>'.htmlspecialchars($guild->getName()).'</b>.</td></tr>          </table>        </div>  </table></div></td></tr><br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=show" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+					
+					$main_content .= '
+						<div class="TableContainer" >
+							<table class="Table1" cellpadding="0" cellspacing="0" >
+								<div class="CaptionContainer" >
+									<div class="CaptionInnerContainer" > 
+										<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+										<div class="Text" >New Guild Leadership</div>
+										<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+										<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+										<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+									</div>
+								</div>
+								<tr>
+									<td>
+										<div class="InnerTableContainer" >
+											<table style="width:100%;" >
+												<tr>
+													<td>The new leader is '.$to_player->getName().'.</td>
+												</tr>
+											</table>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div><BR>
+						<TABLE BORDER=0 WIDTH=100%>
+							<TR>
+								<TD ALIGN=center>
+									<table border="0" cellspacing="0" cellpadding="0" >
+										<form action="?subtopic=guilds" method="post" >
+											<input type="hidden" name="action" value="view">
+											<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+											<tr>
+												<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+														<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+															<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+														</div>
+													</div>
+												</td>
+											</tr>
+										</form>
+									</table>
+								</TD>
+							</TR>
+						</TABLE>';
+				} else {
+					//formulario com as ações
+					$main_content .= '
+						Select a member to your new Guild Leader and click "Submit" button.<BR><BR>
+						<FORM ACTION="?subtopic=guilds" METHOD=post>
+							<div class="TableContainer" >
+								<table class="Table1" cellpadding="0" cellspacing="0" >
+									<div class="CaptionContainer" >
+										<div class="CaptionInnerContainer" > 
+											<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+											<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+											<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+											<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>								
+											<div class="Text" >Resign Leadership</div>
+											<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+											<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+											<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+											<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+										</div>
+									</div>
+									<tr>
+										<td>
+											<div class="InnerTableContainer" >
+												<table style="width:100%;" >
+													<TR>
+														<TD BGCOLOR=#D4C0A1>
+															<TABLE BORDER=0 CELLPADDING=1>
+																<TR>
+																	<TD>
+																		<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=1>
+																			<TR>
+																				<TD>Resign Leadership to:</TD>
+																			</TR>
+																		</TABLE>
+																	</TD>
+																	<TD>&#160;&#160;&#160;</TD>
+																	<TD>
+																		<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=1>
+																			<TR>
+																				<TD align="right" valign="top">
+																					<SELECT NAME="character">';
+																				$rank_list = $guild->getGuildRanksList();
+																				foreach($rank_list as $rank) {
+																					$players_with_rank = $rank->getPlayersList();
+																					foreach($players_with_rank as $player) {
+																						if($guild_leader_char->getName() != $player->getName()) {
+																							$main_content .= '<OPTION>' . $player->getName() . '</OPTION>';
+																						}
+																					}
+																				}
+																				$main_content .='																					
+																					</SELECT>
+																				</TD>
+																			</TR>
+																		</TABLE>
+																	</TD>
+																</TR>
+															</TABLE>
+														</TD>
+													</TR>
+													<TR>
+														<TD>
+															<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=1>
+																<TR>
+																	<TD>Password:</TD>
+																	<TD><input type="password" name="password"></TD>
+																</TR>
+															</TABLE>													
+														</TD>
+													</TR>
+												</table>
+											</div>
+										</td>
+									</tr>
+								</table>
+							</div>
+						<BR>
+						<TABLE BORDER=0 WIDTH=100%>
+							<TR align="center">
+								<TD ALIGN=center>
+									<table border="0" cellspacing="0" cellpadding="0" >
+										<tr>
+											<td style="border:0px;" >
+												<input type="hidden" name=action value=resignleadership >
+												<input type="hidden" name="resign" value="yes">
+												<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+												<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+													<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+														<input class="ButtonText" type="image" name="Submit" alt="Submit" src="'.$layout_name.'/images/buttons/_sbutton_submit.gif" >
+													</div>
+												</div>
+											</td>			
+										<tr>
+									</table>
+								</TD>
+								</FORM>
+								<TD ALIGN=center>
+									<table border="0" cellspacing="0" cellpadding="0" >
+										<form action="?subtopic=guilds&action=view" method="post" >
+											<tr>
+												<td style="border:0px;" >
+													<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+													<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+														<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+															<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+														</div>
+													</div>
+												</td>
+											</tr>
+										</form>
+									</table>
+								</TD>
+							</TR>
+						</TABLE>';
 				}
-				else
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Pass leadership to: </b><br>
-					<form action="?subtopic=guilds&guild='.$guild_id.'&action=passleadership" METHOD=post><input type="hidden" name="todo" value="save"><input type="text" size="40" name="player"><input type="submit" value="Save"></form>
-					</td></tr>          </table>        </div>  </table></div></td></tr><br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=manager" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
-	}
-	if(empty($guild_errors) && !empty($guild_errors2))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors2 as $guild_error2)
-			$main_content .= '<li>'.$guild_error2;
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=passleadership" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error;
-		if(!empty($guild_errors2))
-			foreach($guild_errors2 as $guild_error2)
-				$main_content .= '<li>'.$guild_error2;
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br><br/><center><form action="?subtopic=guilds&action=show&guild='.$guild_id.'" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'deleteguild')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		if($logged)
-		{
-			$guild_leader_char = $guild->getOwner();
-			$rank_list = $guild->getGuildRanksList();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild->getOwner()->getId() == $player->getId())
-				{
-					$guild_vice = TRUE;
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
-			{
-				if($_POST['todo'] == 'save')
-				{
-					$guild->delete();
-					$saved = TRUE;
-				}
-				if($saved)
-				{
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Guild with ID <b>'.$guild_id.'</b> has been deleted.</td></tr>          </table>        </div>  </table></div></td></tr>';
-					$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-				}
-				else
-				{
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Are you sure you want delete guild with ID <b>'.$guild_id.'</b>?<br>
-					<form action="?subtopic=guilds&guild='.$guild_id.'&action=deleteguild" METHOD=post><input type="hidden" name="todo" value="save"><input type="submit" value="Yes, delete"></form>
-					</td></tr>          </table>        </div>  </table></div></td></tr>';
-					$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=manager" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-				}
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'deletebyadmin')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		if($logged)
-		{
-			if($group_id_of_acc_logged >= $config['site']['access_admin_panel'])
-			{
-				if($_POST['todo'] == 'save')
-				{
-					$guild->delete();
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Guild with ID <b>'.$guild_id.'</b> has been deleted.</td></tr>          </table>        </div>  </table></div></td></tr><br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-				}
-				else
-					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Are you sure you want delete guild <b>'.htmlspecialchars($guild->getName()).'</b>?<br>
-					<form action="?subtopic=guilds&guild='.$guild_id.'&action=deletebyadmin" METHOD=post><input type="hidden" name="todo" value="save"><input type="submit" value="Yes, delete"></form>
-					</td></tr>          </table>        </div>  </table></div></td></tr><br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-			}
-			else
-				$guild_errors[] = 'You are not an admin!';
-		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t delete guild.';
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'changemotd')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		if($logged)
-		{
-			$guild_leader_char = $guild->getOwner();
-			$rank_list = $guild->getGuildRanksList();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild->getOwner()->getId() == $player->getId())
-				{
-					$guild_vice = TRUE;
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
-			{
-				if($_REQUEST['todo'] == 'save')
-				{
-					$motd = htmlspecialchars(substr(trim($_REQUEST['motd']),0,$config['site']['guild_motd_chars_limit']));
-					$guild->set('motd', $motd);
-					$guild->save();
-					$saved = TRUE;
-				}
-				$main_content .= '<center><h2>Change guild MOTD</h2></center>';
-				if($saved)
-					$main_content .= '<center><font color="red" size="3"><b>CHANGES HAS BEEN SAVED!</b></font></center><br>';
-				$main_content .= 'Here you can change MOTD (Message of the Day, showed in game!) of your guild.<BR>';
-				$main_content .= '<form enctype="multipart/form-data" action="?subtopic=guilds&guild='.$guild_id.'&action=changemotd" method="POST">
-				<input type="hidden" name="todo" value="save" />
-				    <textarea name="motd" cols="60" rows="3">'.$guild->get('motd').'</textarea><br>
-				    (max. '.$config['site']['guild_motd_chars_limit'].' chars) <input type="submit" value="Save MOTD" /></form><br>';
-				$main_content .= '<br/><center><form action="?subtopic=guilds&guild='.$guild_id.'&action=manager" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-		else
-			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error;
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'saveranks')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(empty($guild_errors))
-	{
-		$guild = new Guild();
-		$guild->load($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-	}
-	if(empty($guild_errors))
-	{
-		if($logged)
-		{
-			$guild_leader_char = $guild->getOwner();
-			$rank_list = $guild->getGuildRanksList();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_vice = TRUE;
-					$guild_leader = TRUE;
-					$level_in_guild = 3;
-				}
-			if($guild_leader)
-			{
-				foreach($rank_list as $rank)
-				{
-					$rank_id = $rank->getId();
-					$name = $_REQUEST[$rank_id.'_name'];
-					$level = (int) $_REQUEST[$rank_id.'_level'];
-					if(check_rank_name($name))
-						$rank->setName($name);
-					else
-						$ranks_errors[] = 'Invalid rank name. Please use only a-Z, 0-9 and spaces. Rank ID <b>'.$rank_id.'</b>.';
-					if($level > 0 && $level < 4)
-						$rank->setLevel($level);
-					else
-						$ranks_errors[] = 'Invalid rank level. Contact with admin. Rank ID <b>'.$rank_id.'</b>.';
-					$rank->save();
-				}
-				if(!empty($ranks_errors))
-				{
-					$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-					foreach($ranks_errors as $guild_error)
-						$main_content .= '<li>'.$guild_error.'</li>';
-					$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-				}
-				else
-					header("Location: ?subtopic=guilds&action=manager&guild=".$guild_id);
-			}
+			} 
 			else
 				$guild_errors[] = 'You are not a leader of guild!';
 		}
@@ -1952,326 +3613,371 @@ if($action == 'saveranks')
 			$guild_errors[] = 'You are not logged. You can\'t manage guild.';
 	}
 	if(!empty($guild_errors)) {
-	$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-	foreach($guild_errors as $guild_error) {
-		$main_content .= '<li>'.$guild_error.'</li>';
-	}
-	$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
+		//errors
+			$main_content .= '
+				<div class="TableContainer" >
+					<table class="Table1" cellpadding="0" cellspacing="0" >
+						<div class="CaptionContainer" >
+							<div class="CaptionInnerContainer" > 
+								<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>							
+								<div class="Text" >Guild Leadership Error</div>
+								<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+								<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+								<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+								<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							</div>
+						</div>
+						<tr>
+							<td>
+								<div class="InnerTableContainer" >
+									<table style="width:100%;" >
+										<tr>
+											<td>';
+											foreach($guild_errors as $guild_error)
+												$main_content .= '<p>'.$guild_error;
+										$main_content .= '
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<input type="hidden" name="action" value="view">
+									<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
 	}
 }
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'cleanup_players')
-{
-	if($logged)
-	{
-		if($group_id_of_acc_logged >= $config['site']['access_admin_panel'])
-		{
-			$players_list = new DatabaseList('Player');
-		}
-		else
-			$players_list = $account_logged->getPlayersList();
-		if(count($players_list) > 0)
-		{
-			foreach($players_list as $player)
-			{
-				$player_rank = $player->getRank();
-				if(!empty($player_rank))
-				{
-					if($player_rank->isLoaded())
-					{
-						$rank_guild = $player_rank->getGuild();
-						if(!$rank_guild->isLoaded())
-						{
-							$player->setRank();
-							$player->setGuildNick();
-							$player->save();
-							$changed_ranks_of[] = $player->getName();
-							$deleted_ranks[] = 'ID: '.$player_rank->getId().' - '.$player_rank->getName();
-							$player_rank->delete();
-						}
-					}
-					else
-					{
-						$player->setRank();
-						$player->setGuildNick('');
-						$player->save();
-						$changed_ranks_of[] = $player->getName();
-					}
-					
-				}
-			}
-			$main_content .= "<b>Deleted ranks (this ranks guilds doesn't exist [bug fix]):</b>";
-			if(!empty($deleted_ranks))
-				foreach($deleted_ranks as $rank)
-					$main_content .= "<li>".htmlspecialchars($rank);
-			$main_content .= "<BR /><BR /><b>Changed ranks of players (rank or guild of rank doesn't exist [bug fix]):</b>";
-			if(!empty($changed_ranks_of))
-				foreach($changed_ranks_of as $name)
-					$main_content .= "<li>".htmlspecialchars($name);
-		}
-		else
-			$main_content .= "0 players found.";
-	}
-	else
-		$main_content .= "You are not logged in.";
-	$main_content .= "<center><h3><a href=\"?subtopic=guilds\">BACK</a></h3></center>";
-}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-	if($action == 'change_nick')
-	{
+if($action == "guildwars") {
+	
+	# Guild wars status
+	# 1 - War Started
+	# 2 - War Rejected
+	# 3 - War Canceled
+	
+	
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$guild = new Guild();
+	$guild->loadByName($guild_name);
+	if(!$guild->isLoaded())
+		$guild_errors[] = 'Guild with name <b>'.$guild_name.'</b> doesn\'t exist.';
+	
+	$guild_id = $guild->getID();
+	if(empty($guild_errors)) {
+		//check is it vice or/and leader account (leader has vice + leader rights)
+		$guild_leader_char = $guild->getOwner();
+		$rank_list = $guild->getGuildRanksList();
+		$guild_leader = FALSE;
+		$guild_vice = FALSE;
 		if($logged)
 		{
-			$player_n = $_REQUEST['name'];
-			$new_nick = $_REQUEST['nick'];
-			$player = new Player();
-			$player->find($player_n);
-			$player_from_account = FALSE;
-			if(strlen($new_nick) <= 30)
+			$account_players = $account_logged->getPlayers();
+			foreach($account_players as $player)
 			{
-				if($player->isLoaded())
-				{
-					$account_players = $account_logged->getPlayersList();
-					if(count($account_players))
-					{
-						foreach($account_players as $acc_player)
+				$players_from_account_ids[] = $player->getId();
+				$player_rank = $player->getRank();
+				if(!empty($player_rank))
+					foreach($rank_list as $rank_in_guild)
+						if($rank_in_guild->getId() == $player_rank->getId())
 						{
-							if($acc_player->getId() == $player->getId())
-								$player_from_account = TRUE;
+							$players_from_account_in_guild[] = $player->getName();
+							if($player_rank->getLevel() > 1)
+							{
+								$guild_vice = TRUE;
+								$level_in_guild = $player_rank->getLevel();
+							}
+							if($guild->getOwner()->getId() == $player->getId())
+							{
+								$guild_vice = TRUE;
+								$guild_leader = TRUE;
+							}
 						}
-						if($player_from_account)
-						{
-							$player->setGuildNick($new_nick);
-							$player->save();
-							$main_content .= 'Guild nick of player <b>'.htmlspecialchars($player->getName()).'</b> changed to <b>'.htmlspecialchars($new_nick).'</b>.';
-							$addtolink = '&action=show&guild='.$player->getRank()->getGuildId();
-						}
-						else
-							$main_content .= 'This player is not from your account.';
-					}
-					else
-						$main_content .= 'This player is not from your account.';
-				}
-				else
-					$main_content .= 'Unknow error occured.';
 			}
-			else
-				$main_content .= 'Too long guild nick. Max. 30 chars, your: '.strlen($new_nick);
 		}
-		else
-			$main_content .= 'You are not logged.';
-		$main_content .= '<center><h3><a href="?subtopic=guilds'.$addtolink.'">BACK</a></h3></center>';
 	}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'guildwar_invitation_accept')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	$war_id = (int) $_REQUEST['war'];
-	if(!$logged)
-		$guild_errors[] = 'You are not logged.';
-	if(empty($guild_errors))
-	{
-		$guild = new Guild($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-		if(empty($guild_errors))
+	if($guild_leader)
+		$main_content .= '
+			<center>
+				<table border="0" cellspacing="0" cellpadding="0" >
+					<form action="?subtopic=guilds" method="post" >
+						<tr>
+							<td style="border:0px;" >
+								<input type="hidden" name=action value=declarewar >
+								<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+								<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+									<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+										<input class="ButtonText" type="image" name="Declare War" alt="Declare War" src="'.$layout_name.'/images/buttons/_sbutton_declarewar.gif" >
+									</div>
+								</div>
+							</td>
+						</tr>
+					</form>
+				</table>
+			</center>
+			<br/>';
+			/*
+		$main_content .= '
+			<div class="TableContainer" >
+				<table class="Table5" cellpadding="0" cellspacing="0" >
+					<div class="CaptionContainer" >
+						<div class="CaptionInnerContainer" > 
+							<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+							<div class="Text" >Declarations of War</div>
+							<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+							<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+							<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+							<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						</div>
+					</div>
+					<tr>
+						<td><div class="InnerTableContainer" >
+								<table style="width:100%;" >
+									<tr>
+										<td>The guild Lino Lucky has currently no open war declarations.</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<br/>';
+			*/
+			$main_content .= "<script type=\"text/javascript\"><!--
+		function show_hide(flip)
 		{
-			$guild_leader_char = $guild->getOwner();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-			{
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_leader = TRUE;
-				}
-			}
-			if($guild_leader)
-			{
-				$war = new GuildWar($war_id);
-				if(!$war->isLoaded())
-					$guild_errors[] = 'War with ID <b>'.$war_id.'</b> doesn\'t exist.';
-
-				if(empty($guild_errors))
-				{
-					if($war->getGuild2ID() != $guild->getID() || $war->getStatus() != GuildWar::STATE_INVITED)
-					{
-						$guild_errors[] = 'Your guild is not invited to that war.';
-					}
-
-					if(empty($guild_errors))
-					{
-						$war->setStatus(GuildWar::STATE_ON_WAR);
-						$war->setStarted(time());
-						$war->setEnded(0);
-						$war->save();
-						header("Location: ?subtopic=guilds&action=show&guild=".$guild_id."");
-						$main_content .= 'War invitation accepted. Redirecting...';
-					}
-				}
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
+				var tmp = document.getElementById(flip);
+				if(tmp)
+						tmp.style.display = tmp.style.display == 'none' ? '' : 'none';
 		}
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
+		--></script>";
+	$main_content .= '
+		<div class="TableContainer" >
+			<table class="Table5" cellpadding="0" cellspacing="0" >
+				<div class="CaptionContainer" >
+					<div class="CaptionInnerContainer" > 
+						<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+						<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+						<div class="Text" >Guild Wars</div>
+						<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+						<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+						<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+					</div>
+				</div>
+				<tr>
+					<td>
+						<div class="InnerTableContainer" >
+							<table style="width:100%;" >';
+							$main_content .= '
+								<tr>
+									<td>
+										<div class="TableShadowContainerRightTop" >
+												<div class="TableShadowRightTop" style="background-image:url('.$layout_name.'/images/content/table-shadow-rt.gif);" ></div>
+											</div>
+											<div class="TableContentAndRightShadow" style="background-image:url('.$layout_name.'/images/content/table-shadow-rm.gif);" >
+												<div class="TableContentContainer" >
+													<table class="TableContent" width="100%" >
+														<tr class="LabelV">
+															<td>Aggressor</td>
+															<td>Information</td>
+															<td>Enemy</td>
+														</tr>';
+														$warFrags = array();
+														foreach($SQL->query('SELECT * FROM `guildwar_kills` WHERE `killerguild` = ' . $guild_id . ' OR `targetguild` = ' . $guild_id . ' ORDER BY `time` DESC')->fetchAll() as $frag)
+														{
+															$warFrags[$frag['warid']][] = $frag;
+														}
+												
+														$count = 0;
+														foreach($SQL->query('SELECT `guild_wars`.`id`, `guild_wars`.`guild1`, `guild_wars`.`guild2`, `guild_wars`.`name1`, `guild_wars`.`name2`, `guild_wars`.`status`, `guild_wars`.`started`, `guild_wars`.`ended`, (SELECT COUNT(1) FROM `guildwar_kills` WHERE `guildwar_kills`.`warid` = `guild_wars`.`id` AND `guildwar_kills`.`killerguild` = `guild_wars`.`guild1`) guild1_kills, (SELECT COUNT(1) FROM `guildwar_kills` WHERE `guildwar_kills`.`warid` = `guild_wars`.`id` AND `guildwar_kills`.`killerguild` = `guild_wars`.`guild2`) guild2_kills FROM `guild_wars` WHERE `guild1` = ' . $guild_id . ' OR `guild2` = ' . $guild_id . ' ORDER BY CASE `status` WHEN 0 THEN 2 WHEN 1 THEN 1 WHEN 4 THEN 3 WHEN 3 THEN 4 WHEN 2 THEN 5 END, `started` DESC') as $war)
+														{
+															$count++;
+															$main_content .= "<tr style=\"background: " . (is_int($count / 2) ? $config['site']['darkborder'] : $config['site']['lightborder']) . ";\">
+														<td align=\"center\"><a href=\"?subtopic=guilds&action=view&GuildName=".$war['name1']."\"><img src=\"guild_image.php?id=" . $war['guild1'] . "\" width=\"64\" height=\"64\" border=\"0\"/><br />".htmlspecialchars($war['name1'])."</a></td>
+														<td align=\"center\">";
+															switch($war['status'])
+															{
+																case 0:
+																{
+																	$main_content .= "<b>Pending acceptation</b><br />Invited on " . date("M d Y, H:i:s", $war['started']) . " for " . (($war['ended'] - $war['started']) / 3600) . " hours war.<br />";
+																	if($guild_leader && $war['guild2'] == $guild->getID())
+																	{
+																		$main_content .= '<br /><a href="?subtopic=guilds&action=guildwar_accept&GuildName=' . $guild_name . '&war=' . $war['id'] . '" onclick="return confirm(\'Are you sure that you want ACCEPT that invitation for 2 hours war?\');" style="cursor: pointer;">accept invitation to war</a>';
+																		$main_content .= '<br /><br /><a href="?subtopic=guilds&action=guildwar_reject&GuildName=' . $guild_name . '&war=' . $war['id'] . '" onclick="return confirm(\'Are you sure that you want REJECT that invitation for 2 hours war?\');" style="cursor: pointer;">reject invitation to war</a>';
+																	}
+																	if($guild_leader && $war['guild1'] == $guild->getID())
+																	{
+																		$main_content .= '<br /><br /><a href="?subtopic=guilds&action=guildwar_cancel&GuildName=' . $guild_name . '&war=' . $war['id'] . '" onclick="return confirm(\'Are you sure that you want CANCEL that invitation for 2 hours war?\');" style="cursor: pointer;">cancel invitation to war</a>';
+																	}
+																	$main_content .= '</font>';
+																	break;
+																}
+																case 1:
+																{
+																	$main_content .= "<font size=\"12\"><span style=\"color: red;\">" . $war['guild1_kills'] . "</span><font color=black> : </font><span style=\"color: lime;\">" . $war['guild2_kills'] . "</span></font><br /><br /><span style=\"color: darkred; font-weight: bold;\">On a brutal war</span><br /><font color=black>Began on " . date("M d Y, H:i:s", $war['started']) . ", will end up after server restart after " . date("M d Y, H:i:s", $war['started'] + (2*3600)) . ".<br /></font>";
+																	$main_content .= "<br /><br />";
+																	if(in_array($war['status'], array(1,4)))
+																	{
+																		$main_content .= "<a onclick=\"show_hide('war-details:" . $war['id'] . "'); return false;\" style=\"cursor: pointer;\">War Details</a>";
+																	}
+																	break;
+																}
+																case 2:
+																{
+																	$main_content .= "<b>Rejected invitation</b><br />Invited on " . date("M d Y, H:i:s", $war['started']) . ", rejected on " . date("M d Y, H:i:s", $war['ended']) . ".</font>";
+																	break;
+																}
+																case 3:
+																{
+																	$main_content .= "<b>Canceled invitation</b><br />Sent invite on " . date("M d Y, H:i:s", $war['started']) . ", canceled on " . date("M d Y, H:i:s", $war['ended']) . ".</font>";
+																	break;
+																}
+																case 4:
+																{
+																	$main_content .= "<b><i>Ended</i></b><br />Began on " . date("M d Y, H:i:s", $war['started']) . ", ended on " . date("M d Y, H:i:s", $war['ended']) . ". Frag statistics: <span style=\"color: red;\">" . $war['guild1_kills'] . "</span> to <span style=\"color: lime;\">" . $war['guild2_kills'] . "</span>.";
+																	$main_content .= "<br /><br />";
+																	if(in_array($war['status'], array(1,4)))
+																	{
+																		$main_content .= "<a onclick=\"show_hide('war-details:" . $war['id'] . "'); return false;\" style=\"cursor: pointer;\">&raquo; Details &laquo;</a>";
+																	}
+																	$main_content .= "</font>";
+																	break;
+																}
+																default:
+																{
+																	$main_content .= "Unknown, please contact with gamemaster.";
+																	break;
+																}
+															}
+															$main_content .= "</td>
+														<td align=\"center\"><a href=\"?subtopic=guilds&action=view&GuildName=".$war['name2']."\"><img src=\"guild_image.php?id=" . $war['guild2'] . "\" width=\"64\" height=\"64\" border=\"0\"/><br />".htmlspecialchars($war['name2'])."</a></td>
+														</tr>
+														<tr id=\"war-details:" . $war['id'] . "\" style=\"display: none; background: " . (is_int($count / 2) ? $config['site']['darkborder'] : $config['site']['lightborder']) . ";\">
+														<td colspan=\"3\">";
+															if(in_array($war['status'], array(1,4)))
+															{
+																if(isset($warFrags[$war['id']]))
+																{
+																	foreach($warFrags[$war['id']] as $frag)
+																	{
+																		$main_content .= date("j M Y, H:i", $frag['time']) . " <span style=\"font-weight: bold; color: " . ($frag['killerguild'] == $war['guild1'] ? "red" :"lime") . ";\">+</span><a href=\"?subtopic=characters&name=" . urlencode($frag['killer']) . "\"><b>".htmlspecialchars($frag['killer'])."</b></a> killed <a href=\"?subtopic=characters&name=".urlencode($frag['target'])."\"> " . htmlspecialchars($frag['target']) . "</a>";
+																	}
+																}
+																else
+																	$main_content .= "<center>There were no frags on this war so far.</center>";
+															}
+															else
+																$main_content .= "</td></tr>";
+														}
+												$main_content .= '
+													</table>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>';
+						if($count == 0)
+							$main_content .= "
+								<tr>
+									<td>The guild ".$guild_name." is currently not involved in a guild war.</td>
+								</tr>";
+						$main_content .= '
+							</table>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<br/>';
+		/*
+	$main_content .= '
+		<div class="TableContainer" >
+			<table class="Table5" cellpadding="0" cellspacing="0" >
+				<div class="CaptionContainer" >
+					<div class="CaptionInnerContainer" > 
+						<span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+						<span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>						
+						<div class="Text" >Guild War History</div>
+						<span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>
+						<span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span> 
+						<span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+						<span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>
+					</div>
+				</div>
+				<tr>
+					<td>
+						<div class="InnerTableContainer">
+							<table style="width:100%;">
+								<tr>
+									<td>The guild Lino Lucky has never participated in a guild war.</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<br/>';
+		*/
+	$main_content .= '
+		<center>
+			<table border="0" cellspacing="0" cellpadding="0" >
+				<form action="?subtopic=guilds&action=view" method="post" >
+					<tr>
+						<td style="border:0px;" >
+							<input type="hidden" name=GuildName value="'.$_REQUEST['GuildName'].'" >
+							<div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+								<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+									<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+								</div>
+							</div>
+						</td>
+					</tr>
+				</form>
+			</table>
+		</center>
+		';
 }
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'guildwar_invitation_reject')
+if($action == 'declarewar')
 {
-	$guild_id = (int) $_REQUEST['guild'];
-	$war_id = (int) $_REQUEST['war'];
+	$guild_name = (string) $_REQUEST['GuildName'];
 	if(!$logged)
 		$guild_errors[] = 'You are not logged.';
 	if(empty($guild_errors))
 	{
-		$guild = new Guild($guild_id);
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
 		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-		if(empty($guild_errors))
-		{
-			$guild_leader_char = $guild->getOwner();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-			{
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_leader = TRUE;
-				}
-			}
-			if($guild_leader)
-			{
-				$war = new GuildWar($war_id);
-				if(!$war->isLoaded())
-					$guild_errors[] = 'War with ID <b>'.$war_id.'</b> doesn\'t exist.';
-
-				if(empty($guild_errors))
-				{
-					if($war->getGuild2ID() != $guild->getID() || $war->getStatus() != GuildWar::STATE_INVITED)
-					{
-						$guild_errors[] = 'Your guild is not invited to that war.';
-					}
-
-					if(empty($guild_errors))
-					{
-						$war->setStatus(GuildWar::STATE_REJECTED);
-						$war->setEnded(time());
-						$war->save();
-						header("Location: ?subtopic=guilds&action=show&guild=".$guild_id."");
-						$main_content .= 'War invitation rejected. Redirecting...';
-					}
-				}
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'guildwar_invitation_cancel')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	$war_id = (int) $_REQUEST['war'];
-	if(!$logged)
-		$guild_errors[] = 'You are not logged.';
-	if(empty($guild_errors))
-	{
-		$guild = new Guild($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
-		if(empty($guild_errors))
-		{
-			$guild_leader_char = $guild->getOwner();
-			$guild_leader = FALSE;
-			$account_players = $account_logged->getPlayers();
-			foreach($account_players as $player)
-			{
-				if($guild_leader_char->getId() == $player->getId())
-				{
-					$guild_leader = TRUE;
-				}
-			}
-			if($guild_leader)
-			{
-				$war = new GuildWar($war_id);
-				if(!$war->isLoaded())
-					$guild_errors[] = 'War with ID <b>'.$war_id.'</b> doesn\'t exist.';
-
-				if(empty($guild_errors))
-				{
-					if($war->getGuild1ID() != $guild->getID() || $war->getStatus() != GuildWar::STATE_INVITED)
-					{
-						$guild_errors[] = 'Your guild did not invite to that war.';
-					}
-
-					if(empty($guild_errors))
-					{
-						$war->setStatus(GuildWar::STATE_CANCELED);
-						$war->setEnded(time());
-						$war->save();
-						header("Location: ?subtopic=guilds&action=show&guild=".$guild_id."");
-						$main_content .= 'War invitation rejected. Redirecting...';
-					}
-				}
-			}
-			else
-				$guild_errors[] = 'You are not a leader of guild!';
-		}
-	}
-	if(!empty($guild_errors))
-	{
-		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
-		foreach($guild_errors as $guild_error)
-			$main_content .= '<li>'.$guild_error.'</li>';
-		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
-		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
-	}
-}
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'guildwar_choose_enemy')
-{
-	$guild_id = (int) $_REQUEST['guild'];
-	if(!$logged)
-		$guild_errors[] = 'You are not logged.';
-	if(empty($guild_errors))
-	{
-		$guild = new Guild($guild_id);
-		if(!$guild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
 		if(empty($guild_errors))
 		{
 			$guild_leader_char = $guild->getOwner();
@@ -2327,7 +4033,7 @@ if($action == 'guildwar_choose_enemy')
 						else
 						{
 							// can invite
-							$main_content .= '<a href="?subtopic=guilds&action=guildwar_invite_guild&guild=' . $guild->getID() . '&enemy=' . $enemyGuild->getID() . '" onclick="return confirm(\'Are you sure that you want invite that guild?\')">INVITE FOR WAR</a>';
+							$main_content .= '<a href="?subtopic=guilds&action=guildwar_invite&GuildName=' . urlencode($guild->getName()) . '&enemy=' . $enemyGuild->getID() . '" onclick="return confirm(\'Are you sure that you want invite that guild?\')">INVITE FOR WAR</a>';
 						}
 					}
 					else
@@ -2352,24 +4058,19 @@ if($action == 'guildwar_choose_enemy')
 		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
 	}
 }
-
-
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------//-----------------------------------------------------------------------------
-if($action == 'guildwar_invite_guild')
+if($action == 'guildwar_invite')
 {
-	$guild_id = (int) $_REQUEST['guild'];
+	$guild_name = (string) $_REQUEST['GuildName'];
 	$enemy_id = (int) $_REQUEST['enemy'];
 	if(!$logged)
 		$guild_errors[] = 'You are not logged.';
 	if(empty($guild_errors))
 	{
-		$guild = new Guild($guild_id);
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
 		$enemyGuild = new Guild($enemy_id);
 		if(!$guild->isLoaded() || !$enemyGuild->isLoaded())
-			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> or ID<b>'.$enemy_id.'</b> doesn\'t exist.';
+			$guild_errors[] = 'Guild <b>'.$guild_id.'</b> or <b>'.$enemy_id.'</b> doesn\'t exist.';
 		if(empty($guild_errors))
 		{
 			$guild_leader_char = $guild->getOwner();
@@ -2424,7 +4125,7 @@ if($action == 'guildwar_invite_guild')
 						$war->setStarted(time());
 						$war->setEnded(0);
 						$war->save();
-						header("Location: ?subtopic=guilds&action=show&guild=".$guild_id."");
+						header("Location: ?subtopic=guilds&action=view&GuildName=".urlencode($guild_name)."");
 						$main_content .= 'War invitation sent. Redirecting...';
 					}
 				}
@@ -2436,6 +4137,253 @@ if($action == 'guildwar_invite_guild')
 			else
 				$guild_errors[] = 'You are not a leader of guild!';
 		}
+	}
+	if(!empty($guild_errors))
+	{
+		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
+		foreach($guild_errors as $guild_error)
+			$main_content .= '<li>'.$guild_error.'</li>';
+		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
+		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+	}
+}
+if($action == 'guildwar_cancel')
+{
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$war_id = (int) $_REQUEST['war'];
+	if(!$logged)
+		$guild_errors[] = 'You are not logged.';
+	if(empty($guild_errors))
+	{
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
+		if(empty($guild_errors))
+		{
+			$guild_leader_char = $guild->getOwner();
+			$guild_leader = FALSE;
+			$account_players = $account_logged->getPlayers();
+			foreach($account_players as $player)
+			{
+				if($guild_leader_char->getId() == $player->getId())
+				{
+					$guild_leader = TRUE;
+				}
+			}
+			if($guild_leader)
+			{
+				$war = new GuildWar($war_id);
+				if(!$war->isLoaded())
+					$guild_errors[] = 'War with ID <b>'.$war_id.'</b> doesn\'t exist.';
+
+				if(empty($guild_errors))
+				{
+					if($war->getGuild1ID() != $guild->getID() || $war->getStatus() != GuildWar::STATE_INVITED)
+					{
+						$guild_errors[] = 'Your guild did not invite to that war.';
+					}
+
+					if(empty($guild_errors))
+					{
+						$war->setStatus(GuildWar::STATE_CANCELED);
+						$war->setEnded(time());
+						$war->save();
+						header("Location: ?subtopic=guilds&action=view&GuildName=".$guild_name."");
+						$main_content .= 'War invitation rejected. Redirecting...';
+					}
+				}
+			}
+			else
+				$guild_errors[] = 'You are not a leader of guild!';
+		}
+	}
+	if(!empty($guild_errors))
+	{
+		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
+		foreach($guild_errors as $guild_error)
+			$main_content .= '<li>'.$guild_error.'</li>';
+		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
+		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+	}
+}
+if($action == 'guildwar_reject')
+{
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$war_id = (int) $_REQUEST['war'];
+	if(!$logged)
+		$guild_errors[] = 'You are not logged.';
+	if(empty($guild_errors))
+	{
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
+		if(empty($guild_errors))
+		{
+			$guild_leader_char = $guild->getOwner();
+			$guild_leader = FALSE;
+			$account_players = $account_logged->getPlayers();
+			foreach($account_players as $player)
+			{
+				if($guild_leader_char->getId() == $player->getId())
+				{
+					$guild_leader = TRUE;
+				}
+			}
+			if($guild_leader)
+			{
+				$war = new GuildWar($war_id);
+				if(!$war->isLoaded())
+					$guild_errors[] = 'War with ID <b>'.$war_id.'</b> doesn\'t exist.';
+
+				if(empty($guild_errors))
+				{
+					if($war->getGuild2ID() != $guild->getID() || $war->getStatus() != GuildWar::STATE_INVITED)
+					{
+						$guild_errors[] = 'Your guild is not invited to that war.';
+					}
+
+					if(empty($guild_errors))
+					{
+						$war->setStatus(GuildWar::STATE_REJECTED);
+						$war->setEnded(time());
+						$war->save();
+						header("Location: ?subtopic=guilds&action=view&GuildName=".urlencode($guild_name)."");
+						$main_content .= 'War invitation rejected. Redirecting...';
+					}
+				}
+			}
+			else
+				$guild_errors[] = 'You are not a leader of guild!';
+		}
+	}
+	if(!empty($guild_errors))
+	{
+		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
+		foreach($guild_errors as $guild_error)
+			$main_content .= '<li>'.$guild_error.'</li>';
+		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
+		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+	}
+}
+if($action == 'guildwar_accept')
+{
+	$guild_name = (string) $_REQUEST['GuildName'];
+	$war_id = (int) $_REQUEST['war'];
+	if(!$logged)
+		$guild_errors[] = 'You are not logged.';
+	if(empty($guild_errors))
+	{
+		$guild = new Guild();
+		$guild->loadByName($guild_name);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild <b>'.$guild_name.'</b> doesn\'t exist.';
+		if(empty($guild_errors))
+		{
+			$guild_leader_char = $guild->getOwner();
+			$guild_leader = FALSE;
+			$account_players = $account_logged->getPlayers();
+			foreach($account_players as $player)
+			{
+				if($guild_leader_char->getId() == $player->getId())
+				{
+					$guild_leader = TRUE;
+				}
+			}
+			if($guild_leader)
+			{
+				$war = new GuildWar($war_id);
+				if(!$war->isLoaded())
+					$guild_errors[] = 'War with ID <b>'.$war_id.'</b> doesn\'t exist.';
+
+				if(empty($guild_errors))
+				{
+					if($war->getGuild2ID() != $guild->getID() || $war->getStatus() != GuildWar::STATE_INVITED)
+					{
+						$guild_errors[] = 'Your guild is not invited to that war.';
+					}
+
+					if(empty($guild_errors))
+					{
+						$war->setStatus(GuildWar::STATE_ON_WAR);
+						$war->setStarted(time());
+						$war->setEnded(0);
+						$war->save();
+						header("Location: ?subtopic=guilds&action=view&GuildName=".urlencode($guild_name)."");
+						$main_content .= 'War invitation accepted. Redirecting...';
+					}
+				}
+			}
+			else
+				$guild_errors[] = 'You are not a leader of guild!';
+		}
+	}
+	if(!empty($guild_errors))
+	{
+		$main_content .= '<div class="SmallBox" >  <div class="MessageContainer" >    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="ErrorMessage" >      <div class="BoxFrameVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="BoxFrameVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></div>      <div class="AttentionSign" style="background-image:url('.$layout_name.'/images/content/attentionsign.gif);" /></div><b>The Following Errors Have Occurred:</b><br/>';
+		foreach($guild_errors as $guild_error)
+			$main_content .= '<li>'.$guild_error.'</li>';
+		$main_content .= '</div>    <div class="BoxFrameHorizontal" style="background-image:url('.$layout_name.'/images/content/box-frame-horizontal.gif);" /></div>    <div class="BoxFrameEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>    <div class="BoxFrameEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></div>  </div></div><br>';
+		$main_content .= '<br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+	}
+}
+if($action == "guildevents") {
+	$main_content .= '
+		Page under construction
+		<BR><BR>
+				<TABLE BORDER=0 WIDTH=100%>
+					<TR>
+						<TD ALIGN=center>
+							<table border="0" cellspacing="0" cellpadding="0" >
+								<form action="?subtopic=guilds" method="post" >
+									<input type="hidden" name="action" value="view">
+									<input type="hidden" name="GuildName" value="'.$_REQUEST['GuildName'].'">
+									<tr>
+										<td style="border:0px;" ><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" >
+												<div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div>
+													<input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" >
+												</div>
+											</div>
+										</td>
+									</tr>
+								</form>
+							</table>
+						</TD>
+					</TR>
+				</TABLE>';
+}
+if($action == 'deletebyadmin')
+{
+	$guild_id = (int) $_REQUEST['guild'];
+	if(empty($guild_errors))
+	{
+		$guild = new Guild();
+		$guild->load($guild_id);
+		if(!$guild->isLoaded())
+			$guild_errors[] = 'Guild with ID <b>'.$guild_id.'</b> doesn\'t exist.';
+	}
+	if(empty($guild_errors))
+	{
+		if($logged)
+		{
+			if($group_id_of_acc_logged >= $config['site']['access_admin_panel'])
+			{
+				if($_POST['todo'] == 'save')
+				{
+					$guild->delete();
+					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Guild with ID <b>'.$guild_id.'</b> has been deleted.</td></tr>          </table>        </div>  </table></div></td></tr><br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+				}
+				else
+					$main_content .= '<div class="TableContainer" >  <table class="Table1" cellpadding="0" cellspacing="0" >    <div class="CaptionContainer" >      <div class="CaptionInnerContainer" >        <span class="CaptionEdgeLeftTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightTop" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionBorderTop" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionVerticalLeft" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <div class="Text" >Guild Deleted</div>        <span class="CaptionVerticalRight" style="background-image:url('.$layout_name.'/images/content/box-frame-vertical.gif);" /></span>        <span class="CaptionBorderBottom" style="background-image:url('.$layout_name.'/images/content/table-headline-border.gif);" ></span>        <span class="CaptionEdgeLeftBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>        <span class="CaptionEdgeRightBottom" style="background-image:url('.$layout_name.'/images/content/box-frame-edge.gif);" /></span>      </div>    </div>    <tr>      <td>        <div class="InnerTableContainer" >          <table style="width:100%;" ><tr><td>Are you sure you want delete guild <b>'.htmlspecialchars($guild->getName()).'</b>?<br>
+					<form action="?subtopic=guilds&guild='.$guild_id.'&action=deletebyadmin" METHOD=post><input type="hidden" name="todo" value="save"><input type="submit" value="Yes, delete"></form>
+					</td></tr>          </table>        </div>  </table></div></td></tr><br/><center><form action="?subtopic=guilds" METHOD=post><div class="BigButton" style="background-image:url('.$layout_name.'/images/buttons/sbutton.gif)" ><div onMouseOver="MouseOverBigButton(this);" onMouseOut="MouseOutBigButton(this);" ><div class="BigButtonOver" style="background-image:url('.$layout_name.'/images/buttons/sbutton_over.gif);" ></div><input class="ButtonText" type="image" name="Back" alt="Back" src="'.$layout_name.'/images/buttons/_sbutton_back.gif" ></div></div></form></center>';
+			}
+			else
+				$guild_errors[] = 'You are not an admin!';
+		}
+		else
+			$guild_errors[] = 'You are not logged. You can\'t delete guild.';
 	}
 	if(!empty($guild_errors))
 	{
