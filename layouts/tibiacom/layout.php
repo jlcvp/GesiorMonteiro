@@ -679,8 +679,8 @@ $whoisonlineworld = 'index.php?subtopic=whoisonline&world=0';
 ?>
 <div id="PlayersOnline" onClick="window.location='<?PHP echo "$whoisonlineworld"; ?>'">
           <?PHP
-            if($config['status']['serverStatus_online'] == 0)
-                echo ''.$number_of_players_online.'<br />Players Online';
+            if($config['status']['serverStatus_online'] == 1)
+                echo ''.$config['status']['serverStatus_players'].'<br />Players Online';
             else
                 echo '<font color="red"><b>Server<br />OFFLINE</b></font>';
           ?></div>
